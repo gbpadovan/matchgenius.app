@@ -26,14 +26,16 @@ import { BlockCloseButton } from './block-close-button';
 import { BlockMessages } from './block-messages';
 import { useSidebar } from './ui/sidebar';
 import { useBlock } from '@/hooks/use-block';
-import { imageBlock } from '@/blocks/image/client';
-import { codeBlock } from '@/blocks/code/client';
-import { sheetBlock } from '@/blocks/sheet/client';
+//import { imageBlock } from '@/blocks/image/client';
+//import { codeBlock } from '@/blocks/code/client';
+//import { sheetBlock } from '@/blocks/sheet/client';
 import { textBlock } from '@/blocks/text/client';
 import equal from 'fast-deep-equal';
 
-export const blockDefinitions = [textBlock, codeBlock, imageBlock, sheetBlock];
+//export const blockDefinitions = [textBlock, codeBlock, imageBlock, sheetBlock];
+export const blockDefinitions = [textBlock];
 export type BlockKind = (typeof blockDefinitions)[number]['kind'];
+
 
 export interface UIBlock {
   title: string;

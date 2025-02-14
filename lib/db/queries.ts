@@ -51,10 +51,12 @@ export async function saveChat({
   id,
   userId,
   title,
+  visibility = 'private', // Add default visibility
 }: {
   id: string;
   userId: string;
   title: string;
+  visibility?: 'private' | 'public';
 }) {
   try {
     return await db.insert(chat).values({
@@ -62,9 +64,28 @@ export async function saveChat({
       createdAt: new Date(),
       userId,
       title,
+      visibility, // Make sure visibility is saved
     });
   } catch (error) {
-    console.error('Failed to save chat in database');
+    console.error('Failed to save chat in database:', error);
+    throw error;
+  }
+}
+
+// Add a debugging function to help diagnose issues
+export async function debugChat({ id }: { id: string }) {
+  try {
+    // Get the chat
+    const chatData = await db.select().from(chat).where(eq(chat.id, id));
+    console.log('Chat data:', chatData);
+
+    // Get associated messages
+    const messages = await db.select().from(message).where(eq(message.chatId, id));
+    console.log('Messages:', messages);
+
+    return { chat: chatData[0], messages };
+  } catch (error) {
+    console.error('Failed to debug chat:', error);
     throw error;
   }
 }

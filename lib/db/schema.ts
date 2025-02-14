@@ -10,7 +10,7 @@ import {
   foreignKey,
   boolean,
 } from 'drizzle-orm/pg-core';
-import { blockKinds } from '../blocks/server';
+//import { blockKinds } from '../blocks/server';
 
 export const user = pgTable('User', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
@@ -73,7 +73,7 @@ export const document = pgTable(
     createdAt: timestamp('createdAt').notNull(),
     title: text('title').notNull(),
     content: text('content'),
-    kind: varchar('text', { enum: ['text', 'code', 'image', 'sheet'] })
+    kind: varchar('text', { enum: ['text'] })
       .notNull()
       .default('text'),
     userId: uuid('userId')
