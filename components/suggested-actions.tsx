@@ -16,24 +16,24 @@ interface SuggestedActionsProps {
 function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   const suggestedActions = [
     {
-      title: 'What are the advantages',
-      label: 'of using Next.js?',
-      action: 'What are the advantages of using Next.js?',
+      title: 'Create an opening message',
+      label: 'for a sports enthusiast',
+      action: 'Help me create an opening message for a woman who loves sports. Her profile shows she plays volleyball and follows NBA.',
     },
     {
-      title: 'Write code to',
-      label: `demonstrate djikstra's algorithm`,
-      action: `Write code to demonstrate djikstra's algorithm`,
+      title: 'Conversation starter',
+      label: 'for a travel lover',
+      action: 'Create a conversation starter for someone who loves traveling. Their profile shows pictures from Europe and Asia.',
     },
     {
-      title: 'Help me write an essay',
-      label: `about silicon valley`,
-      action: `Help me write an essay about silicon valley`,
+      title: 'Message response',
+      label: 'to "What do you do for fun?"',
+      action: 'Help me respond to the message "What do you do for fun?" in an engaging way.',
     },
     {
-      title: 'What is the weather',
-      label: 'in San Francisco?',
-      action: 'What is the weather in San Francisco?',
+      title: 'Craft a bio',
+      label: 'for my dating profile',
+      action: 'Help me write an engaging bio for my dating profile that shows personality and interests.',
     },
   ];
 

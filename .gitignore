@@ -36,3 +36,7 @@ yarn-error.log*
 .vercel
 .vscode
 .env*.local
+
+#my files
+db_deleting_local_db.sql
+db_setup_local_db.sql
