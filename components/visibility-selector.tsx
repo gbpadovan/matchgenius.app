@@ -69,9 +69,9 @@ export function VisibilitySelector({
           className,
         )}
       >
-        <Button
-          variant="outline"
-          className="hidden md:flex md:px-2 md:h-[34px]"
+        <Button 
+          variant="outline" 
+          className="cherry-hover hidden md:flex md:px-2 md:h-[34px]"
         >
           {selectedVisibility?.icon}
           {selectedVisibility?.label}
@@ -82,26 +82,26 @@ export function VisibilitySelector({
       <DropdownMenuContent align="start" className="min-w-[300px]">
         {visibilities.map((visibility) => (
           <DropdownMenuItem
-            key={visibility.id}
-            onSelect={() => {
-              setVisibilityType(visibility.id);
-              setOpen(false);
-            }}
-            className="gap-4 group/item flex flex-row justify-between items-center"
-            data-active={visibility.id === visibilityType}
-          >
-            <div className="flex flex-col gap-1 items-start">
-              {visibility.label}
-              {visibility.description && (
-                <div className="text-xs text-muted-foreground">
-                  {visibility.description}
-                </div>
-              )}
-            </div>
-            <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
-              <CheckCircleFillIcon />
-            </div>
-          </DropdownMenuItem>
+          key={visibility.id}
+          onSelect={() => {
+            setVisibilityType(visibility.id);
+            setOpen(false);
+          }}
+          className="gap-4 group/item flex flex-row justify-between items-center"
+          data-active={visibility.id === visibilityType}
+        >
+          <div className="flex flex-col gap-1 items-start">
+            {visibility.label}
+            {visibility.description && (
+              <div className="text-xs text-muted-foreground">
+                {visibility.description}
+              </div>
+            )}
+          </div>
+          <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
+            <CheckCircleFillIcon />
+          </div>
+        </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>

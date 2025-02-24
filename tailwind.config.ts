@@ -69,6 +69,12 @@ const config: Config = {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        // New brand colors
+        ivory: 'hsl(60, 100%, 97%)',         /* #FFFFEE */
+        'cherry-blossom': 'hsl(347, 100%, 58%)', /* #FB8C5 */
+        'match-red': 'hsl(350, 100%, 51%)',  /* #FF061C */
+        licorice: 'hsl(21, 13%, 9%)',        /* #1B1613 */
+        gold: 'hsl(46, 100%, 50%)',          /* #FFD200 */
       },
     },
   },

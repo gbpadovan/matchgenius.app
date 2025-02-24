@@ -39,7 +39,7 @@ export function ModelSelector({
           className,
         )}
       >
-        <Button variant="outline" className="md:px-2 md:h-[34px]">
+        <Button variant="outline" className="cherry-hover md:px-2 md:h-[34px]">
           {selectedChatModel?.name}
           <ChevronDownIcon />
         </Button>

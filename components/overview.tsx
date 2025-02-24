@@ -19,7 +19,7 @@ export const Overview = () => {
           <MessageIcon size={32} className="text-blue-500" />
         </p>
         <p className="text-lg">
-          Welcome to Match Perfect! Get help crafting engaging messages that 
+          Welcome to Match Genius! Get help crafting engaging messages that 
           showcase your personality and create meaningful connections.
         </p>
         <p className="text-muted-foreground">

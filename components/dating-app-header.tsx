@@ -15,18 +15,17 @@ export function DatingAppHeader() {
     <div className="sticky top-0 z-50 w-full border-b bg-background px-4">
       <Card className="border-none shadow-none">
         <CardHeader className="text-center pb-2">
+
           <div className="flex justify-between items-center">
-            <CardTitle className="text-2xl font-bold">Match Perfect</CardTitle>            
+            <CardTitle className="text-2xl font-bold">Match Genius</CardTitle>            
           </div>
+
           <CardDescription className="text-lg">
             Your AI-powered dating message assistant
           </CardDescription>
+
         </CardHeader>
-        <CardContent className="text-center pb-4">
-          <p className="text-muted-foreground text-sm">
-            Get help crafting the perfect messages for your dating conversations. Select your AI model and privacy settings above.
-          </p>
-        </CardContent>
+        
       </Card>
     </div>
   );
