@@ -1,4 +1,4 @@
-# Match Perfect App
+# Match Genius App
 
 Chatbot for pick up lines.
 
