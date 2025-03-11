@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Toaster } from 'sonner';
 
-import { ThemeProvider } from '@/components/theme-provider';
+import { Providers } from '@/components/providers';
 import { SubscriptionProvider } from '@/hooks/use-subscription';
 import { auth } from '@/app/(auth)/auth';
 import { getSubscriptionByUserId } from '@/lib/db/queries';
@@ -64,17 +64,12 @@ export default async function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <Providers session={session}>
           <SubscriptionProvider initialSubscription={subscription}>
             <Toaster position="top-center" />
             {children}
           </SubscriptionProvider>
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );
