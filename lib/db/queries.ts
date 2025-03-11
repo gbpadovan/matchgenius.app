@@ -15,6 +15,12 @@ import {
   type Message,
   message,
   vote,
+  subscription,
+  product,
+  price,
+  type Subscription,
+  type Product,
+  type Price,
 } from './schema';
 import { BlockKind } from '@/components/block';
 
@@ -363,6 +369,240 @@ export async function updateChatVisiblityById({
     return await db.update(chat).set({ visibility }).where(eq(chat.id, chatId));
   } catch (error) {
     console.error('Failed to update chat visibility in database');
+    throw error;
+  }
+}
+
+export async function createOrUpdateSubscription({
+  userId,
+  stripeCustomerId,
+  stripeSubscriptionId,
+  stripePriceId,
+  stripeCurrentPeriodEnd,
+  status,
+}: {
+  userId: string;
+  stripeCustomerId: string;
+  stripeSubscriptionId?: string;
+  stripePriceId?: string;
+  stripeCurrentPeriodEnd?: Date;
+  status?: string;
+}) {
+  try {
+    // Check if a subscription already exists for this user
+    const existingSubscription = await db
+      .select()
+      .from(subscription)
+      .where(eq(subscription.userId, userId));
+
+    if (existingSubscription.length > 0) {
+      // Update existing subscription
+      return await db
+        .update(subscription)
+        .set({
+          stripeCustomerId,
+          ...(stripeSubscriptionId ? { stripeSubscriptionId } : {}),
+          ...(stripePriceId ? { stripePriceId } : {}),
+          ...(stripeCurrentPeriodEnd ? { stripeCurrentPeriodEnd } : {}),
+          ...(status ? { status } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(subscription.userId, userId));
+    } else {
+      // Create new subscription
+      return await db.insert(subscription).values({
+        userId,
+        stripeCustomerId,
+        stripeSubscriptionId,
+        stripePriceId,
+        stripeCurrentPeriodEnd,
+        status,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+  } catch (error) {
+    console.error('Failed to create or update subscription in database', error);
+    throw error;
+  }
+}
+
+export async function getSubscriptionByUserId(userId: string): Promise<Subscription | null> {
+  try {
+    const result = await db
+      .select()
+      .from(subscription)
+      .where(eq(subscription.userId, userId));
+
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error('Failed to get subscription by user ID from database', error);
+    throw error;
+  }
+}
+
+export async function getSubscriptionByStripeSubscriptionId(
+  stripeSubscriptionId: string
+): Promise<Subscription | null> {
+  try {
+    const result = await db
+      .select()
+      .from(subscription)
+      .where(eq(subscription.stripeSubscriptionId, stripeSubscriptionId));
+
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error(
+      'Failed to get subscription by Stripe subscription ID from database',
+      error
+    );
+    throw error;
+  }
+}
+
+export async function createOrUpdateProduct({
+  stripeProductId,
+  name,
+  description,
+  active,
+}: {
+  stripeProductId: string;
+  name: string;
+  description?: string;
+  active?: boolean;
+}): Promise<void> {
+  try {
+    const existingProduct = await db
+      .select()
+      .from(product)
+      .where(eq(product.stripeProductId, stripeProductId));
+
+    if (existingProduct.length > 0) {
+      await db
+        .update(product)
+        .set({
+          name,
+          description,
+          active: active ?? true,
+          updatedAt: new Date(),
+        })
+        .where(eq(product.stripeProductId, stripeProductId));
+    } else {
+      await db.insert(product).values({
+        stripeProductId,
+        name,
+        description,
+        active: active ?? true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+  } catch (error) {
+    console.error('Failed to create or update product in database', error);
+    throw error;
+  }
+}
+
+export async function getProductByStripeProductId(
+  stripeProductId: string
+): Promise<Product | null> {
+  try {
+    const result = await db
+      .select()
+      .from(product)
+      .where(eq(product.stripeProductId, stripeProductId));
+
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error('Failed to get product by Stripe product ID from database', error);
+    throw error;
+  }
+}
+
+export async function createOrUpdatePrice({
+  productId,
+  stripePriceId,
+  currency,
+  type,
+  interval,
+  intervalCount,
+  unitAmount,
+  active,
+}: {
+  productId: string;
+  stripePriceId: string;
+  currency: string;
+  type: 'one_time' | 'recurring';
+  interval?: 'day' | 'week' | 'month' | 'year';
+  intervalCount?: number;
+  unitAmount: number;
+  active?: boolean;
+}): Promise<void> {
+  try {
+    const existingPrice = await db
+      .select()
+      .from(price)
+      .where(eq(price.stripePriceId, stripePriceId));
+
+    if (existingPrice.length > 0) {
+      await db
+        .update(price)
+        .set({
+          currency,
+          type,
+          interval,
+          intervalCount,
+          unitAmount,
+          active: active ?? true,
+          updatedAt: new Date(),
+        })
+        .where(eq(price.stripePriceId, stripePriceId));
+    } else {
+      await db.insert(price).values({
+        productId,
+        stripePriceId,
+        currency,
+        type,
+        interval,
+        intervalCount,
+        unitAmount,
+        active: active ?? true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+  } catch (error) {
+    console.error('Failed to create or update price in database', error);
+    throw error;
+  }
+}
+
+export async function getActiveProducts(): Promise<Array<Product & { prices: Price[] }>> {
+  try {
+    const products = await db
+      .select()
+      .from(product)
+      .where(eq(product.active, true))
+      .orderBy(asc(product.name));
+
+    const productIds = products.map((product) => product.id);
+
+    const prices = await db
+      .select()
+      .from(price)
+      .where(
+        and(
+          inArray(price.productId, productIds),
+          eq(price.active, true)
+        )
+      );
+
+    return products.map((product) => ({
+      ...product,
+      prices: prices.filter((price) => price.productId === product.id),
+    }));
+  } catch (error) {
+    console.error('Failed to get active products with prices from database', error);
     throw error;
   }
 }

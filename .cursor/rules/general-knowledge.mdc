@@ -1,0 +1,37 @@
+---
+description: this is a brief explanation about the project
+globs: 
+---
+# Project name: Match Genius
+
+## What is it?: 
+* This is an app that uses AI to generate pick up lines for men to date women.
+* The users will copy the message provided by the app, then they can paste in their own dating apps.
+
+## How does it work?:
+* The user will enter some information regarding their dating prospects into the chat box. 
+* An api using a special prompt designed to understand the woman's profile will send a request to the desired AI Provider (that could be either Anthropic, OpenAI or DeepSeek)
+* Then the app will receive the response containing the curated "message" that the user needs to answer to the girl. 
+* Then the user provides new messages from the girl and the app returns his curated responses.
+
+## project path:
+* /home/g/dados_/dev/projects/matchgenius/repos/matchgenius.app/ (main branch)
+* /home/g/dados_/dev/projects/matchgenius/repos/matchgenius.app.stripe/ (stripe feature branch)
+	* use this path to access/inspect the code, through mcp tools
+	* do not access .env files
+
+## technologies:
+* This project is based upon "https://github.com/vercel/ai-chatbot"
+* Next.js
+* AI SDK
+* shadcn/ui
+* NextAuth.js
+* Drizze ORM
+	* development phase: 
+		* URL: 'postgres://mpuser:*******@localhost:5432/matchperfect'
+		* db name: matchperfect
+		* user: mpuser
+
+### deprecated technologies:
+* Vercel Postgres powered by Neon
+* Vercel Blob 

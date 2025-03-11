@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { SubscriptionGuard } from '@/components/subscription-guard';
 
 import { auth } from '../(auth)/auth';
 import Script from 'next/script';
@@ -24,7 +25,11 @@ export default async function Layout({
       />
       <SidebarProvider defaultOpen={!isCollapsed}>
         <AppSidebar user={session?.user} />
-        <SidebarInset>{children}</SidebarInset>
+        <SidebarInset>
+          <SubscriptionGuard>
+            {children}
+          </SubscriptionGuard>
+        </SidebarInset>
       </SidebarProvider>
     </>
   );

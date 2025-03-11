@@ -2,7 +2,7 @@
 
 import type { Attachment, Message } from 'ai';
 import { useChat } from 'ai/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 
 import { ChatHeader } from '@/components/chat-header';
@@ -15,6 +15,7 @@ import { Messages } from './messages';
 import { VisibilityType } from './visibility-selector';
 import { useBlockSelector } from '@/hooks/use-block';
 import { toast } from 'sonner';
+import { useSubscription } from '@/hooks/use-subscription';
 
 export function Chat({
   id,
@@ -30,6 +31,21 @@ export function Chat({
   isReadonly: boolean;
 }) {
   const { mutate } = useSWRConfig();
+  const { isSubscribed } = useSubscription();
+  
+  // Get message count for today
+  const today = new Date().toISOString().split('T')[0];
+  const [messageCount, setMessageCount] = useState<number>(
+    parseInt(localStorage.getItem(`messages_${today}`) || '0', 10)
+  );
+
+  useEffect(() => {
+    // Update message count whenever localStorage changes
+    const storedCount = localStorage.getItem(`messages_${today}`);
+    if (storedCount) {
+      setMessageCount(parseInt(storedCount, 10));
+    }
+  }, [today]);
 
   const {
     messages,
@@ -64,6 +80,37 @@ export function Chat({
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const isBlockVisible = useBlockSelector((state) => state.isVisible);
 
+  // Custom submit handler to check subscription status
+  const handleMessageSubmit = (e: React.FormEvent<HTMLFormElement>, chatRequestOptions?: ChatRequestOptions) => {
+    e.preventDefault();
+    
+    // Check if user can send more messages when not subscribed
+    if (!isSubscribed) {
+      // Increment message count
+      const newCount = messageCount + 1;
+      localStorage.setItem(`messages_${today}`, newCount.toString());
+      setMessageCount(newCount);
+      
+      // Notify the subscription guard through the global function
+      // @ts-ignore
+      if (window.incrementMessageCount) {
+        // @ts-ignore
+        window.incrementMessageCount();
+      }
+    }
+    
+    // Continue with normal submit
+    handleSubmit(e, chatRequestOptions);
+  };
+
+  // Wrapper function to adapt handleMessageSubmit to the expected type
+  const handleMessageSubmitWrapper = (event?: { preventDefault?: () => void }, chatRequestOptions?: ChatRequestOptions) => {
+    if (event?.preventDefault) {
+      event.preventDefault();
+    }
+    handleMessageSubmit(event as React.FormEvent<HTMLFormElement>, chatRequestOptions);
+  };
+
   return (
     <>
       <div className="flex flex-col min-w-0 h-dvh bg-background">
@@ -85,21 +132,32 @@ export function Chat({
           isBlockVisible={isBlockVisible}
         />
 
-        <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
+        <form 
+          className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl"
+          onSubmit={handleMessageSubmit}
+        >
           {!isReadonly && (
-            <MultimodalInput
-              chatId={id}
-              input={input}
-              setInput={setInput}
-              handleSubmit={handleSubmit}
-              isLoading={isLoading}
-              stop={stop}
-              attachments={attachments}
-              setAttachments={setAttachments}
-              messages={messages}
-              setMessages={setMessages}
-              append={append}
-            />
+            <div className="flex w-full gap-2">
+              <MultimodalInput
+                chatId={id}
+                input={input}
+                setInput={setInput}
+                handleSubmit={handleMessageSubmitWrapper}
+                isLoading={isLoading}
+                stop={stop}
+                attachments={attachments}
+                setAttachments={setAttachments}
+                messages={messages}
+                setMessages={setMessages}
+                append={append}
+              />
+              
+              {!isSubscribed && (
+                <div className="text-xs text-muted-foreground self-center whitespace-nowrap ml-1">
+                  {5 - messageCount} left today
+                </div>
+              )}
+            </div>
           )}
         </form>
       </div>
@@ -108,7 +166,7 @@ export function Chat({
         chatId={id}
         input={input}
         setInput={setInput}
-        handleSubmit={handleSubmit}
+        handleSubmit={handleMessageSubmitWrapper}
         isLoading={isLoading}
         stop={stop}
         attachments={attachments}

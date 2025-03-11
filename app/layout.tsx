@@ -2,13 +2,16 @@ import type { Metadata } from 'next';
 import { Toaster } from 'sonner';
 
 import { ThemeProvider } from '@/components/theme-provider';
+import { SubscriptionProvider } from '@/hooks/use-subscription';
+import { auth } from '@/app/(auth)/auth';
+import { getSubscriptionByUserId } from '@/lib/db/queries';
 
 import './globals.css';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://chat.vercel.ai'),
-  title: 'Next.js Chatbot Template',
-  description: 'Next.js chatbot template using the AI SDK.',
+  metadataBase: new URL('https://matchgenius.app'), // app url
+  title: 'Match Genius - AI-Powered Dating Messages',
+  description: 'Generate perfect dating app messages with AI assistance.',
 };
 
 export const viewport = {
@@ -40,13 +43,17 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch the user's subscription
+  const session = await auth();
+  let subscription = null;
+  
+  if (session?.user?.id) {
+    subscription = await getSubscriptionByUserId(session.user.id);
+  }
+  
   return (
     <html
       lang="en"
-      // `next-themes` injects an extra classname to the body element to avoid
-      // visual flicker before hydration. Hence the `suppressHydrationWarning`
-      // prop is necessary to avoid the React hydration mismatch warning.
-      // https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
       suppressHydrationWarning
     >
       <head>
@@ -63,8 +70,10 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Toaster position="top-center" />
-          {children}
+          <SubscriptionProvider initialSubscription={subscription}>
+            <Toaster position="top-center" />
+            {children}
+          </SubscriptionProvider>
         </ThemeProvider>
       </body>
     </html>

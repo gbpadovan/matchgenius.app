@@ -114,3 +114,50 @@ export const suggestion = pgTable(
 );
 
 export type Suggestion = InferSelectModel<typeof suggestion>;
+
+// (stripe) subscription-related tables
+export const subscription = pgTable('Subscription', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  status: varchar('status', { length: 50 }),
+  stripeCustomerId: varchar('stripeCustomerId', { length: 100 }).notNull(),
+  stripeSubscriptionId: varchar('stripeSubscriptionId', { length: 100 }).unique(),
+  stripePriceId: varchar('stripePriceId', { length: 100 }),
+  stripeCurrentPeriodEnd: timestamp('stripeCurrentPeriodEnd'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+});
+
+export type Subscription = InferSelectModel<typeof subscription>;
+
+export const product = pgTable('Product', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  stripeProductId: varchar('stripeProductId', { length: 100 }).notNull().unique(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+});
+
+export type Product = InferSelectModel<typeof product>;
+
+export const price = pgTable('Price', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  productId: uuid('productId')
+    .notNull()
+    .references(() => product.id, { onDelete: 'cascade' }),
+  stripePriceId: varchar('stripePriceId', { length: 100 }).notNull().unique(),
+  currency: varchar('currency', { length: 3 }).notNull().default('usd'),
+  type: varchar('type', { enum: ['one_time', 'recurring'] }).notNull(),
+  interval: varchar('interval', { enum: ['day', 'week', 'month', 'year'] }),
+  intervalCount: json('intervalCount'),
+  unitAmount: json('unitAmount'),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+});
+
+export type Price = InferSelectModel<typeof price>;
