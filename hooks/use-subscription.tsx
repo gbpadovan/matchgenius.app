@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 export type SubscriptionStatus = 'active' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'trialing' | 'unpaid' | null;
 
@@ -38,14 +39,17 @@ export function SubscriptionProvider({
   initialSubscription?: any;
 }) {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [subscription, setSubscription] = useState(initialSubscription);
   const [isLoading, setIsLoading] = useState(!initialSubscription);
   
   useEffect(() => {
-    if (!initialSubscription) {
+    if (!initialSubscription && status === 'authenticated' && session?.user) {
       fetchSubscription();
+    } else if (status === 'unauthenticated') {
+      setIsLoading(false);
     }
-  }, [initialSubscription]);
+  }, [initialSubscription, status, session]);
   
   const fetchSubscription = async () => {
     try {
@@ -54,6 +58,11 @@ export function SubscriptionProvider({
       const response = await fetch('/api/subscription');
       
       if (!response.ok) {
+        if (response.status === 401) {
+          // Handle unauthorized silently
+          setSubscription(null);
+          return;
+        }
         throw new Error('Failed to fetch subscription');
       }
       
@@ -62,7 +71,7 @@ export function SubscriptionProvider({
     } catch (error: any) {
       console.error('Error fetching subscription:', error);
       // Only show error toast if it's not an auth error
-      if (error.message !== 'Unauthorized') {
+      if (error.message !== 'Unauthorized' && error.message !== 'Failed to fetch subscription') {
         toast.error('Failed to load subscription data');
       }
     } finally {
