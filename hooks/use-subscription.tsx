@@ -39,12 +39,16 @@ export function SubscriptionProvider({
 }) {
   const router = useRouter();
   const [subscription, setSubscription] = useState(initialSubscription);
-  const [isLoading, setIsLoading] = useState(!initialSubscription);
+  const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
-    if (!initialSubscription) {
-      fetchSubscription();
+    // Only fetch if we have an initial subscription (meaning we have a session)
+    // This prevents fetching on unauthenticated pages
+    if (initialSubscription === null) {
+      return;
     }
+    
+    fetchSubscription();
   }, [initialSubscription]);
   
   const fetchSubscription = async () => {
@@ -54,6 +58,10 @@ export function SubscriptionProvider({
       const response = await fetch('/api/subscription');
       
       if (!response.ok) {
+        if (response.status === 401) {
+          // Handle unauthorized silently
+          return;
+        }
         throw new Error('Failed to fetch subscription');
       }
       

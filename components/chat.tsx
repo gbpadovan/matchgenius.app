@@ -35,12 +35,10 @@ export function Chat({
   
   // Get message count for today
   const today = new Date().toISOString().split('T')[0];
-  const [messageCount, setMessageCount] = useState<number>(
-    parseInt(localStorage.getItem(`messages_${today}`) || '0', 10)
-  );
+  const [messageCount, setMessageCount] = useState<number>(0);
 
   useEffect(() => {
-    // Update message count whenever localStorage changes
+    // Only access localStorage after component mounts
     const storedCount = localStorage.getItem(`messages_${today}`);
     if (storedCount) {
       setMessageCount(parseInt(storedCount, 10));
