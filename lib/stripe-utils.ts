@@ -1,14 +1,3 @@
-import 'server-only';
-import Stripe from 'stripe';
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: "2025-02-24.acacia", // Use the latest Stripe API version
-  appInfo: {
-    name: 'Match Genius App',
-    version: '0.1.0',
-  },
-});
-
 // Helper to format the amount for display
 export function formatAmountForDisplay(
   amount: number,
@@ -48,4 +37,4 @@ export function formatAmountForStripe(
 
   const isZeroDecimal = currencyToZeroDecimalMap[currency.toUpperCase()];
   return isZeroDecimal ? amount : Math.round(amount * 100);
-}
+} 
