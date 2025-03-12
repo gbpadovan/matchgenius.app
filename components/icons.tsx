@@ -56,24 +56,16 @@ export const AttachmentIcon = () => {
   );
 };
 
-export const VercelIcon = ({ size = 17 }) => {
-  return (
-    <svg
-      height={size}
-      strokeLinejoin="round"
-      viewBox="0 0 16 16"
-      width={size}
-      style={{ color: 'currentcolor' }}
-    >
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M8 1L16 15H0L8 1Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-};
+export const VercelIcon = ({ size = 16, className }: { size?: number, className?: string }) => (
+  <svg
+    height={size}
+    width={size}
+    viewBox="0 0 76 65"
+    className={className}
+  >
+    <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" fill="currentColor" />
+  </svg>
+);
 
 export const GitIcon = () => {
   return (
@@ -746,19 +738,20 @@ export const SidebarLeftIcon = ({ size = 16 }: { size?: number }) => (
   </svg>
 );
 
-export const PlusIcon = ({ size = 16 }: { size?: number }) => (
+export const PlusIcon = ({ size = 16, className }: { size?: number, className?: string }) => (
   <svg
-    height={size}
-    strokeLinejoin="round"
-    viewBox="0 0 16 16"
     width={size}
-    style={{ color: 'currentcolor' }}
+    height={size}
+    viewBox="0 0 16 16"
+    strokeLinejoin="round"
+    className={className}
   >
     <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M8.75 1.75V1H7.25V1.75V6.75H2.25H1.5V8.25H2.25H7.25V13.25V14H8.75V13.25V8.25H13.75H14.5V6.75H13.75H8.75V1.75Z"
-      fill="currentColor"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeWidth={1.5}
+      d="M8 4v8m-4-4h8"
     />
   </svg>
 );

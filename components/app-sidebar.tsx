@@ -31,7 +31,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
     <Sidebar className="group-data-[side=left]:border-r-0">
       <SidebarHeader>
         <SidebarMenu>
-          <div className="flex flex-row justify-between items-center">
+          <div className="flex flex-row justify-between items-center mb-2">
             <Link
               href="/"
               onClick={() => {
@@ -40,69 +40,39 @@ export function AppSidebar({ user }: { user: User | undefined }) {
               className="flex flex-row gap-3 items-center"
             >
               <span className="text-lg font-semibold px-2 hover:bg-muted rounded-md cursor-pointer">
-                Match Perfect
+                Match Genius
               </span>
             </Link>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  className="p-2 h-fit"
-                  onClick={() => {
-                    setOpenMobile(false);
-                    router.push('/');
-                    router.refresh();
-                  }}
-                >
-                  <PlusIcon />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent align="end">New Chat</TooltipContent>
-            </Tooltip>
           </div>
+          {user && <SidebarUserNav user={user} />}
         </SidebarMenu>
       </SidebarHeader>
       
       <SidebarContent>
-        {/* Navigation Links */}
-        <div className="mb-4 px-3 py-2">
-          <div className="flex flex-col space-y-1">
-            <Link
-              href="/"
-              onClick={() => handleNavigate('/')}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-zinc-500 transition-all hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-            >
-              <HomeIcon className="h-4 w-4" />
-              <span>Home</span>
-            </Link>
-            
-            <Link
-              href="/pricing"
-              onClick={() => handleNavigate('/pricing')}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-zinc-500 transition-all hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-            >
-              <CreditCardIcon className="h-4 w-4" />
-              <span>Pricing</span>
-            </Link>
-            
-            <Link
-              href="/account"
-              onClick={() => handleNavigate('/account')}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-zinc-500 transition-all hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-            >
-              <SettingsIcon className="h-4 w-4" />
-              <span>Account</span>
-            </Link>
-          </div>
+        <div className="px-2 mb-4">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  setOpenMobile(false);
+                  router.push('/');
+                  router.refresh();
+                }}
+              >
+                <PlusIcon className="h-4 w-4" />
+                <span>New Chat</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Create a new chat</TooltipContent>
+          </Tooltip>
         </div>
-        
-        <div className="border-t my-2 mb-4"></div>
-        
-        <SidebarHistory user={user} />
+
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <SidebarHistory user={user} />
+        </div>
       </SidebarContent>
-      
-      <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
     </Sidebar>
   );
 }
