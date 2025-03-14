@@ -79,8 +79,10 @@ export function Chat({
   const isBlockVisible = useBlockSelector((state) => state.isVisible);
 
   // Custom submit handler to check subscription status
-  const handleMessageSubmit = (e: React.FormEvent<HTMLFormElement>, chatRequestOptions?: ChatRequestOptions) => {
-    e.preventDefault();
+  const handleMessageSubmit = (e: React.FormEvent<HTMLFormElement> | undefined, chatRequestOptions?: ChatRequestOptions) => {
+    if (e?.preventDefault) {
+      e.preventDefault();
+    }
     
     // Check if user can send more messages when not subscribed
     if (!isSubscribed) {
@@ -98,15 +100,12 @@ export function Chat({
     }
     
     // Continue with normal submit
-    handleSubmit(e, chatRequestOptions);
+    handleSubmit(e as React.FormEvent<HTMLFormElement>, chatRequestOptions);
   };
 
   // Wrapper function to adapt handleMessageSubmit to the expected type
   const handleMessageSubmitWrapper = (event?: { preventDefault?: () => void }, chatRequestOptions?: ChatRequestOptions) => {
-    if (event?.preventDefault) {
-      event.preventDefault();
-    }
-    handleMessageSubmit(event as React.FormEvent<HTMLFormElement>, chatRequestOptions);
+    handleMessageSubmit(event as React.FormEvent<HTMLFormElement> | undefined, chatRequestOptions);
   };
 
   return (
