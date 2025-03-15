@@ -3,8 +3,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
-export function DatingAppHeader() {
+interface DatingAppHeaderProps {
+  variant?: 'default' | 'chat';
+}
+
+export function DatingAppHeader({ variant = 'default' }: DatingAppHeaderProps) {
   const [mounted, setMounted] = useState(false);
 
   // Handle hydration issues by mounting client-side components after initial render
@@ -13,7 +18,9 @@ export function DatingAppHeader() {
   }, []);
 
   return (
-    <div className="sticky top-0 z-50 w-full border-b bg-background px-4">
+    <div className={cn("sticky top-0 z-50 w-full border-b bg-background px-4", {
+      'header-chat': variant === 'chat'
+    })}>
       <Card className="border-none shadow-none">
         <CardHeader className="text-center pb-2">
           <div className="flex justify-between items-center">

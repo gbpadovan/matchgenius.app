@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 
 import { ChatHeader } from '@/components/chat-header';
+import { DatingAppHeader } from '@/components/dating-app-header';
 import type { Vote } from '@/lib/db/schema';
 import { fetcher, generateUUID } from '@/lib/utils';
 
@@ -111,6 +112,7 @@ export function Chat({
   return (
     <>
       <div className="flex flex-col min-w-0 h-dvh bg-background">
+        <DatingAppHeader variant="chat" />
         <ChatHeader
           chatId={id}
           selectedModelId={selectedChatModel}

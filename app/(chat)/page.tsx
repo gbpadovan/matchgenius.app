@@ -14,7 +14,6 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <DatingAppHeader />
       <div className="flex-1">
         <Chat
           key={id}

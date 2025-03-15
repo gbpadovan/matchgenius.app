@@ -242,3 +242,22 @@
 .suggestion-highlight {
     @apply bg-blue-200 hover:bg-blue-300 dark:hover:bg-blue-400/50 dark:text-blue-50 dark:bg-blue-500/40;
 }
+
+/* Header variants */
+.header-chat {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.header-chat .card-header {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.header-chat .card-title {
+  font-size: 1.125rem;
+}
+
+.header-chat .card-description {
+  font-size: 0.875rem;
+}
