@@ -1,5 +1,7 @@
 'use client';
 
+import { SubscriptionUpdater } from './subscription-updater';
+import { RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSubscription } from '@/hooks/use-subscription';
@@ -13,8 +15,30 @@ import { ArrowLeft } from 'lucide-react';
 export default function AccountPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { subscription, isSubscribed, isLoading } = useSubscription();
+  // Removed duplicate destructuring to avoid redeclaration
   const [user, setUser] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Destructure the refreshSubscription method from useSubscription
+  const { 
+    subscription, 
+    isSubscribed, 
+    isLoading: subscriptionLoading, 
+    refreshSubscription 
+  } = useSubscription();
+  
+  // function to handle manual subscription refresh
+  const handleRefreshSubscription = async () => {
+    try {
+      setRefreshing(true);
+      await refreshSubscription();
+      toast.success('Subscription data refreshed');
+    } catch (error) {
+      toast.error('Failed to refresh subscription data');
+    } finally {
+      setRefreshing(false);
+    }
+  };
   
   // Check for success parameter from Stripe redirect
   useEffect(() => {
@@ -43,7 +67,7 @@ export default function AccountPage() {
     fetchUser();
   }, []);
   
-  if (isLoading) {
+  if (subscriptionLoading) {
     return (
       <>
         <DatingAppHeader />
@@ -59,6 +83,7 @@ export default function AccountPage() {
   return (
     <>
       <DatingAppHeader />
+      <SubscriptionUpdater />
       <div className="container max-w-4xl py-10">
         <div className="flex items-center justify-center mb-8">
           <h1 className="text-3xl font-bold">Account Settings</h1>          
@@ -98,10 +123,23 @@ export default function AccountPage() {
           
           {/* Subscription Card */}
           <Card>
-            <CardHeader>
+
+          <CardHeader className="flex flex-row items-center justify-between pr-6">
+            <div>
               <CardTitle>Subscription</CardTitle>
               <CardDescription>Manage your subscription plan</CardDescription>
-            </CardHeader>
+            </div>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={handleRefreshSubscription}
+              disabled={refreshing}
+            >
+              <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </CardHeader>
+
             <CardContent>
               <div className="space-y-4">
                 <div>

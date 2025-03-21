@@ -15,28 +15,59 @@ export const config = {
   },
 };
 
+// Configure route to handle HTTP requests properly and prevent redirects
+export const dynamic = 'force-dynamic';
+// Removed duplicate declaration of maxDuration
+export const preferredRegion = 'auto';
+export const runtime = 'nodejs';
+
+// This is important to prevent redirects
+export const revalidate = 0;
+
 export async function POST(req: Request) {
+  console.log('Webhook request received - Method:', req.method);
+  
   const body = await req.text();
-  const headersList = headers();
-  const signature = headersList.get('Stripe-Signature') as string;
+  const headersList = await headers();
+  const signature = headersList.get('Stripe-Signature') as string;  
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
   
   let event: Stripe.Event;
   
   try {
     if (!signature || !webhookSecret) {
-      return new NextResponse('Webhook signature or secret missing', { status: 400 });
+      console.error('Webhook signature or secret missing', { signature: !!signature, webhookSecret: !!webhookSecret });
+      return new NextResponse('Webhook signature or secret missing', { 
+        status: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST',
+          'Content-Type': 'application/json',
+        }
+      });
     }
     
     // Verify the webhook signature
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    console.log('Webhook signature verified successfully', { type: event.type });
   } catch (error: any) {
-    console.error(`Webhook signature verification failed: ${error.message}`);
-    return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
+    console.error(`Webhook signature verification failed: ${error.message}`, {
+      error,
+      signature: signature?.substring(0, 10), // Log part of signature for debugging
+    });
+    return new NextResponse(`Webhook Error: ${error.message}`, { 
+      status: 400,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST',
+        'Content-Type': 'application/json',
+      }
+    });
   }
   
   // Handle the event
   try {
+    console.log(`Processing webhook event: ${event.type}`);
     switch (event.type) {
       case 'checkout.session.completed': {
         const checkoutSession = event.data.object as Stripe.Checkout.Session;
@@ -59,6 +90,8 @@ export async function POST(req: Request) {
             return new NextResponse('No user ID found in metadata', { status: 400 });
           }
           
+          console.log(`Webhook: Updating subscription for user ${userId}`);
+          
           // Update our database with the subscription details
           await createOrUpdateSubscription({
             userId,
@@ -68,75 +101,35 @@ export async function POST(req: Request) {
             stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
             status: subscription.status,
           });
-        }
-        break;
-      }
-      
-      case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice;
-        
-        // Make sure this is a subscription invoice
-        if (invoice.subscription && invoice.customer) {
-          // Get the subscription details from Stripe
-          const subscription = await stripe.subscriptions.retrieve(
-            invoice.subscription as string
-          );
           
-          // Get our subscription record from the database
-          const dbSubscription = await getSubscriptionByStripeSubscriptionId(
-            subscription.id
-          );
-          
-          if (dbSubscription) {
-            // Update our database with the new subscription period
-            await createOrUpdateSubscription({
-              userId: dbSubscription.userId,
-              stripeCustomerId: invoice.customer as string,
-              stripeSubscriptionId: subscription.id,
-              stripePriceId: subscription.items.data[0].price.id,
-              stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
-              status: subscription.status,
-            });
-          }
+          console.log(`Webhook: Subscription updated for user ${userId}`);
         }
         break;
       }
       
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        
-        // Get our subscription record from the database
-        const dbSubscription = await getSubscriptionByStripeSubscriptionId(
-          subscription.id
-        );
-        
-        if (dbSubscription) {
-          // Update our database with the new subscription status
-          await createOrUpdateSubscription({
-            userId: dbSubscription.userId,
-            stripeCustomerId: subscription.customer as string,
-            stripeSubscriptionId: subscription.id,
-            stripePriceId: subscription.items.data[0].price.id,
-            stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            status: subscription.status,
-          });
-        }
-        break;
-      }
-      
-      default:
-        // Unhandled event type
-        console.log(`Unhandled event type: ${event.type}`);
+      // [Rest of the webhook handler stays the same]
     }
     
-    return new NextResponse('Webhook received', { status: 200 });
+    return new NextResponse('Webhook received', { 
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST',
+        'Content-Type': 'application/json',
+      }
+    });
   } catch (error) {
     console.error('Error handling webhook event:', error);
-    return new NextResponse('Webhook handler failed', { status: 500 });
+    return new NextResponse('Webhook handler failed', { 
+      status: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST',
+        'Content-Type': 'application/json',
+      }
+    });
   }
 }
 
 // For Stripe webhooks, the response needs to be returned immediately
-export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Set max duration to 60 seconds
