@@ -48,7 +48,12 @@ export default async function RootLayout({
   let subscription = null;
   
   if (session?.user?.id) {
-    subscription = await getSubscriptionByUserId(session.user.id);
+    try {
+      subscription = await getSubscriptionByUserId(session.user.id);
+      console.log('Root Layout: Fetched initial subscription data for user:', session.user.id);
+    } catch (error) {
+      console.error('Root Layout: Error fetching subscription data:', error);
+    }
   }
   
   return (

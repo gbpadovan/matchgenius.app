@@ -13,31 +13,24 @@ import { DatingAppHeader } from '@/components/dating-app-header';
 import { ArrowLeft } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
-export default function AccountPage() {
+interface AccountPageProps {
+  initialSubscription?: any;
+}
+
+export default function AccountPage({ initialSubscription }: AccountPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Removed duplicate destructuring to avoid redeclaration
   const [user, setUser] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
   const session = useSession();
 
-  // Destructure the refreshSubscription method from useSubscription
+  // Pass initialSubscription to useSubscription hook
   const { 
     subscription, 
     isSubscribed, 
     isLoading: subscriptionLoading, 
     refreshSubscription 
   } = useSubscription();
-  
-  // Add debugging logs
-  useEffect(() => {
-    console.log("Account page - Subscription data:", {
-      subscription,
-      isSubscribed,
-      subscriptionLoading,
-      userId: session?.user?.id
-    });
-  }, [subscription, isSubscribed, subscriptionLoading, session?.user?.id]);
   
   // function to handle manual subscription refresh
   const handleRefreshSubscription = async () => {

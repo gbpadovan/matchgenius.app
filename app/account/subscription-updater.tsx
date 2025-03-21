@@ -6,7 +6,11 @@ import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/use-subscription';
 import { useSession } from 'next-auth/react';
 
-export function SubscriptionUpdater() {
+interface SubscriptionUpdaterProps {
+  initialSubscription?: any;
+}
+
+export function SubscriptionUpdater({ initialSubscription }: SubscriptionUpdaterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { subscription, refreshSubscription } = useSubscription();
@@ -16,13 +20,14 @@ export function SubscriptionUpdater() {
   
   // Add debug logging
   useEffect(() => {
-    console.log('SubscriptionUpdater mounted', { 
+    console.log('SubscriptionUpdater: Component state:', { 
       success, 
       sessionStatus, 
       hasAttemptedUpdate,
-      subscription 
+      subscription,
+      initialSubscription
     });
-  }, [success, sessionStatus, hasAttemptedUpdate, subscription]);
+  }, [success, sessionStatus, hasAttemptedUpdate, subscription, initialSubscription]);
   
   // Check localStorage to prevent infinite updates
   useEffect(() => {

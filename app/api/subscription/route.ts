@@ -21,8 +21,13 @@ export async function GET() {
       );
     }
     
+    const startTime = Date.now();
+    console.log(`Subscription API: Fetching subscription for user ${session.user.id} at ${new Date().toISOString()}`);
+    
     const subscription = await getSubscriptionByUserId(session.user.id);
-    console.log('Subscription API: Retrieved subscription data:', subscription);
+    const duration = Date.now() - startTime;
+    
+    console.log(`Subscription API: Retrieved subscription data in ${duration}ms:`, subscription);
     
     return NextResponse.json(subscription || null);
   } catch (error: any) {

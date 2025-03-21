@@ -44,14 +44,28 @@ export function SubscriptionProvider({
   const { data: session, status } = useSession();
   const [subscription, setSubscription] = useState(initialSubscription);
   const [isLoading, setIsLoading] = useState(!initialSubscription);
+  const [hasInitialFetch, setHasInitialFetch] = useState(!!initialSubscription);
+  
+  // Update subscription state when initialSubscription changes
+  useEffect(() => {
+    if (initialSubscription) {
+      console.log('SubscriptionProvider: Received initial subscription data:', initialSubscription);
+      setSubscription(initialSubscription);
+      setHasInitialFetch(true);
+      setIsLoading(false);
+    }
+  }, [initialSubscription]);
   
   useEffect(() => {
-    if (!initialSubscription && status === 'authenticated' && session?.user) {
-      fetchSubscription();
+    if (!hasInitialFetch && status === 'authenticated' && session?.user) {
+      console.log('SubscriptionProvider: No initial data, fetching from API...');
+      fetchSubscription().then(() => {
+        setHasInitialFetch(true);
+      });
     } else if (status === 'unauthenticated') {
       setIsLoading(false);
     }
-  }, [initialSubscription, status, session]);
+  }, [hasInitialFetch, status, session]);
   
   // Add event listener for subscription refresh
   useEffect(() => {
