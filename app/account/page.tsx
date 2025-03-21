@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { ManageSubscriptionButton } from './manage-subscription-button';
 import { DatingAppHeader } from '@/components/dating-app-header';
 import { ArrowLeft } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 export default function AccountPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function AccountPage() {
   // Removed duplicate destructuring to avoid redeclaration
   const [user, setUser] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const session = useSession();
 
   // Destructure the refreshSubscription method from useSubscription
   const { 
@@ -26,6 +28,16 @@ export default function AccountPage() {
     isLoading: subscriptionLoading, 
     refreshSubscription 
   } = useSubscription();
+  
+  // Add debugging logs
+  useEffect(() => {
+    console.log("Account page - Subscription data:", {
+      subscription,
+      isSubscribed,
+      subscriptionLoading,
+      userId: session?.user?.id
+    });
+  }, [subscription, isSubscribed, subscriptionLoading, session?.user?.id]);
   
   // function to handle manual subscription refresh
   const handleRefreshSubscription = async () => {

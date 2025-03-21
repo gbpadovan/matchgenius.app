@@ -71,11 +71,15 @@ export function SubscriptionProvider({
     try {
       setIsLoading(true);
       
+      console.log('Fetching subscription data...');
       const response = await fetch('/api/subscription');
+      
+      console.log('Subscription API response status:', response.status);
       
       if (!response.ok) {
         if (response.status === 401) {
           // Handle unauthorized silently
+          console.log('Unauthorized response from subscription API');
           setSubscription(null);
           return;
         }
@@ -83,6 +87,7 @@ export function SubscriptionProvider({
       }
       
       const data = await response.json();
+      console.log('Subscription data from API:', data);
       
       if (data) {
         // Normalize the subscription data - fix date handling
@@ -95,12 +100,14 @@ export function SubscriptionProvider({
               : null
           };
           
+          console.log('Normalized subscription data:', normalizedData);
           setSubscription(normalizedData);
         } catch (e) {
           console.error('Error parsing period end date:', e);
           setSubscription(data);
         }
       } else {
+        console.log('No subscription data returned from API');
         setSubscription(null);
       }
     } catch (error: any) {

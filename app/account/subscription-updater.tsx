@@ -14,12 +14,24 @@ export function SubscriptionUpdater() {
   const [hasAttemptedUpdate, setHasAttemptedUpdate] = useState(false);
   const success = searchParams.get('success');
   
+  // Add debug logging
+  useEffect(() => {
+    console.log('SubscriptionUpdater mounted', { 
+      success, 
+      sessionStatus, 
+      hasAttemptedUpdate,
+      subscription 
+    });
+  }, [success, sessionStatus, hasAttemptedUpdate, subscription]);
+  
   // Check localStorage to prevent infinite updates
   useEffect(() => {
     if (success) {
+      console.log('Success parameter detected:', success);
       const hasUpdated = localStorage.getItem('subscription_updated');
       if (hasUpdated === success) {
         // We've already handled this success parameter
+        console.log('Already handled this success parameter:', success);
         setHasAttemptedUpdate(true);
       }
     }
@@ -29,15 +41,17 @@ export function SubscriptionUpdater() {
     const updateSubscription = async () => {
       // Only run this when the session is authenticated and coming from a successful checkout
       if (sessionStatus !== 'authenticated') {
+        console.log('Session not authenticated, skipping update');
         return;
       }
 
       // Only run this once when coming from a successful checkout
       if (success && subscription?.stripeCustomerId && !hasAttemptedUpdate) {
+        console.log('Attempting to update subscription with customer ID:', subscription.stripeCustomerId);
         setHasAttemptedUpdate(true);
         
         try {
-          console.log('Attempting to update subscription directly...');
+          console.log('Making API call to update subscription...');
           
           const response = await fetch('/api/stripe/update-subscription', {
             method: 'POST',
@@ -49,12 +63,14 @@ export function SubscriptionUpdater() {
             }),
           });
           
+          console.log('Update subscription API response status:', response.status);
+          
           if (!response.ok) {
             throw new Error('Failed to update subscription');
           }
           
           const updatedSubscription = await response.json();
-          console.log('Subscription updated:', updatedSubscription);
+          console.log('Subscription updated successfully:', updatedSubscription);
           
           // Store that we've updated for this success parameter
           localStorage.setItem('subscription_updated', success);
