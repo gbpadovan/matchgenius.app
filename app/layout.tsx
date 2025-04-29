@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
 import { Toaster } from 'sonner';
 
-import { Providers } from '@/components/providers';
+import { Providers } from '@/components/providers/index';
 import { SubscriptionProvider } from '@/hooks/use-subscription';
-import { auth } from '@/app/(auth)/auth';
-import { getSubscriptionByUserId } from '@/lib/db/queries';
+import { createClient } from '@/lib/supabase/server';
 
 import './globals.css';
 
@@ -44,12 +43,20 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // Fetch the user's subscription
-  const session = await auth();
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
   let subscription = null;
   
   if (session?.user?.id) {
     try {
-      subscription = await getSubscriptionByUserId(session.user.id);
+      // Get subscription from Supabase
+      const { data: subscriptionData } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+      
+      subscription = subscriptionData;
       console.log('Root Layout: Fetched initial subscription data for user:', session.user.id);
     } catch (error) {
       console.error('Root Layout: Error fetching subscription data:', error);
@@ -69,7 +76,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <Providers session={session}>
+        <Providers>
           <SubscriptionProvider initialSubscription={subscription}>
             <Toaster position="top-center" />
             {children}

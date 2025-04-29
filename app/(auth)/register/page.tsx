@@ -31,9 +31,12 @@ export default function Page() {
     } else if (state.status === 'invalid_data') {
       toast.error('Failed validating your submission!');
     } else if (state.status === 'success') {
-      toast.success('Account created successfully');
+      toast.success('Account created successfully! Check your email to confirm your account.');
       setIsSuccessful(true);
-      router.refresh();
+      // Redirect to login page after successful registration
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
     }
   }, [state, router]);
 

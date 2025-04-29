@@ -3,7 +3,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useSession } from 'next-auth/react';
+
+import { useSupabaseAuth } from '@/components/providers/supabase-auth-provider';
 
 export type SubscriptionStatus = 'active' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'trialing' | 'unpaid' | null;
 
@@ -41,7 +42,7 @@ export function SubscriptionProvider({
   initialSubscription?: any;
 }) {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { user, session, isLoading: authLoading } = useSupabaseAuth();
   const [subscription, setSubscription] = useState(initialSubscription);
   const [isLoading, setIsLoading] = useState(!initialSubscription);
   const [hasInitialFetch, setHasInitialFetch] = useState(!!initialSubscription);
@@ -57,20 +58,20 @@ export function SubscriptionProvider({
   }, [initialSubscription]);
   
   useEffect(() => {
-    if (!hasInitialFetch && status === 'authenticated' && session?.user) {
+    if (!hasInitialFetch && !authLoading && user) {
       console.log('SubscriptionProvider: No initial data, fetching from API...');
       fetchSubscription().then(() => {
         setHasInitialFetch(true);
       });
-    } else if (status === 'unauthenticated') {
+    } else if (!authLoading && !user) {
       setIsLoading(false);
     }
-  }, [hasInitialFetch, status, session]);
+  }, [hasInitialFetch, authLoading, user]);
   
   // Add event listener for subscription refresh
   useEffect(() => {
     const handleRefreshSubscription = () => {
-      if (status === 'authenticated' && session?.user?.id) {
+      if (user?.id) {
         fetchSubscription();
       }
     };
@@ -79,7 +80,7 @@ export function SubscriptionProvider({
     return () => {
       window.removeEventListener('refresh-subscription', handleRefreshSubscription);
     };
-  }, [status, session?.user?.id]);
+  }, [user?.id]);
   
   const fetchSubscription = async () => {
     try {
