@@ -8,8 +8,8 @@ This is a dating app designed to help users generate and refine pickup lines and
 
 1. Frontend: Next.js with React, using the App Router pattern
 2. UI Framework: Tailwind CSS with shadcn/ui components
-3. Authentication: NextAuth.js for user authentication and session management
-4. Database: PostgreSQL with Drizzle ORM for data modeling and queries
+3. Authentication: Supabase Auth for user authentication and session management
+4. Database: PostgreSQL with Supabase for data storage and queries
 5. AI Integration: AI SDK for connecting to various AI models
 6. Payment Processing: Stripe for subscription management
 
@@ -158,6 +158,39 @@ This multi-modal support enhances the app's ability to provide context-aware and
 * Voting system for message quality
 * Documents for longer content
 * Subscription management tables (Products, Prices, Subscriptions)
+
+#### Row-Level Security (RLS) Policies
+
+The Supabase database implements comprehensive Row-Level Security (RLS) policies to ensure data privacy and security:
+
+* **Users Table**:
+  * Users can only view and update their own profile data
+  * New user records can be created during the sign-up process
+
+* **Chats Table**:
+  * Users can only view, update, and delete their own chats
+  * Public chats are visible to all users through a specific policy
+  * Insert operations verify the user_id matches the authenticated user
+
+* **Messages Table**:
+  * Users can only view messages in their own chats
+  * Messages in public chats are visible to all users
+  * Users can only insert messages into chats they own
+
+* **Votes Table**:
+  * Users can view votes on their own messages
+  * Votes on public chat messages are visible to all users
+  * Users can only insert, update, and delete their own votes
+
+* **Documents Table**:
+  * Users can only view, create, update, and delete their own documents
+  * All operations verify the user_id matches the authenticated user
+
+* **Subscriptions Table**:
+  * Users can only view their own subscription information
+  * Only the service role can manage (insert/update/delete) subscriptions
+
+These RLS policies are enforced at the database level, providing an additional layer of security beyond application-level controls.
 
 ### API Endpoints
 

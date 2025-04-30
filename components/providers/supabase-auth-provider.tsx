@@ -39,36 +39,62 @@ export default function SupabaseAuthProvider({
   useEffect(() => {
     let authListener: { data: { subscription: { unsubscribe: () => void } } } | null = null
     
-    async function getSession() {
+    async function getAuthData() {
       try {
         setIsLoading(true)
         
-        const { data: { session }, error } = await supabase.auth.getSession()
+        // Get the session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
-        if (error) {
-          throw error
+        if (sessionError) {
+          throw sessionError
         }
         
         setSession(session)
-        setUser(session?.user || null)
+        
+        // Get authenticated user data from the server
+        if (session) {
+          const { data: { user }, error: userError } = await supabase.auth.getUser()
+          
+          if (userError) {
+            throw userError
+          }
+          
+          setUser(user)
+        } else {
+          setUser(null)
+        }
         
         // Set up auth state listener
         authListener = await supabase.auth.onAuthStateChange(
-          (_event, session) => {
+          async (_event, session) => {
             setSession(session)
-            setUser(session?.user || null)
+            
+            // Get authenticated user data when auth state changes
+            if (session) {
+              const { data: { user }, error: userError } = await supabase.auth.getUser()
+              
+              if (userError) {
+                console.error('Error getting user:', userError)
+              } else {
+                setUser(user)
+              }
+            } else {
+              setUser(null)
+            }
+            
             router.refresh()
           }
         )
       } catch (error) {
         setError(error as Error)
-        console.error('Error getting session:', error)
+        console.error('Error getting auth data:', error)
       } finally {
         setIsLoading(false)
       }
     }
 
-    getSession()
+    getAuthData()
     
     return () => {
       // Clean up the subscription when the component unmounts
