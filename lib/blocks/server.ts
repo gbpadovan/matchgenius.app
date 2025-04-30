@@ -1,9 +1,9 @@
 import { textDocumentHandler } from '@/blocks/text/server';
 import { BlockKind } from '@/components/block';
 import { DataStreamWriter } from 'ai';
-import { Document } from '../db/schema';
-import { saveDocument } from '../db/queries';
-import { Session } from 'next-auth';
+import { Document } from '../types';
+import { saveDocument } from '../supabase/db';
+import { Session } from '@supabase/supabase-js';
 
 export interface SaveDocumentProps {
   id: string;

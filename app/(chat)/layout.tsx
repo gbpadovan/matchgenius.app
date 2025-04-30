@@ -3,8 +3,7 @@ import { cookies } from 'next/headers';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { SubscriptionGuard } from '@/components/subscription-guard';
-
-import { auth } from '../(auth)/auth';
+import { createClient } from '@/lib/supabase/server';
 import Script from 'next/script';
 
 export const experimental_ppr = true;
@@ -14,8 +13,12 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  const [session, cookieStore] = await Promise.all([auth(), cookies()]);
+  // Need to await cookies() in Next.js 15
+  const cookieStore = await cookies();
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
   const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
+  const user = session?.user || null;
 
   return (
     <>
@@ -24,7 +27,7 @@ export default async function Layout({
         strategy="beforeInteractive"
       />
       <SidebarProvider defaultOpen={!isCollapsed}>
-        <AppSidebar user={session?.user} />
+        <AppSidebar user={user} />
         <SidebarInset>
           <SubscriptionGuard>
             {children}

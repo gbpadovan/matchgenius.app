@@ -5,15 +5,9 @@ import {
   streamText,
 } from 'ai';
 
-import { auth } from '@/app/(auth)/auth';
+import { createClient } from '@/lib/supabase/server';
 import { myProvider } from '@/lib/ai/models';
 import { systemPrompt } from '@/lib/ai/prompts';
-import {
-  deleteChatById,
-  getChatById,
-  saveChat,
-  saveMessages,
-} from '@/lib/db/queries';
 import {
   generateUUID,
   getMostRecentUserMessage,
@@ -36,9 +30,10 @@ export async function POST(request: Request) {
   }: { id: string; messages: Array<Message>; selectedChatModel: string } =
     await request.json();
 
-  const session = await auth();
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
 
-  if (!session || !session.user || !session.user.id) {
+  if (!session || !session.user) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -48,16 +43,36 @@ export async function POST(request: Request) {
     return new Response('No user message found', { status: 400 });
   }
 
-  const chat = await getChatById({ id });
+  // Check if chat exists
+  const { data: chat } = await supabase
+    .from('chats')
+    .select('*')
+    .eq('id', id)
+    .single();
 
   if (!chat) {
     const title = await generateTitleFromUserMessage({ message: userMessage });
-    await saveChat({ id, userId: session.user.id, title });
+    // Create new chat
+    await supabase
+      .from('chats')
+      .insert({
+        id,
+        user_id: session.user.id,
+        title,
+        visibility: 'private'
+      });
   }
 
-  await saveMessages({
-    messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
-  });
+  // Save the user message
+  await supabase
+    .from('messages')
+    .insert({
+      id: userMessage.id,
+      chat_id: id,
+      content: userMessage.content,
+      role: userMessage.role,
+      created_at: new Date().toISOString()
+    });
 
   return createDataStreamResponse({
     execute: (dataStream) => {
@@ -95,17 +110,18 @@ export async function POST(request: Request) {
                 reasoning,
               });
 
-              await saveMessages({
-                messages: sanitizedResponseMessages.map((message) => {
-                  return {
+              // Save the assistant messages
+              for (const message of sanitizedResponseMessages) {
+                await supabase
+                  .from('messages')
+                  .insert({
                     id: message.id,
-                    chatId: id,
+                    chat_id: id,
                     role: message.role,
                     content: message.content,
-                    createdAt: new Date(),
-                  };
-                }),
-              });
+                    created_at: new Date().toISOString()
+                  });
+              }
             } catch (error) {
               console.error('Failed to save chat');
             }
@@ -135,25 +151,41 @@ export async function DELETE(request: Request) {
     return new Response('Not Found', { status: 404 });
   }
 
-  const session = await auth();
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
 
   if (!session || !session.user) {
     return new Response('Unauthorized', { status: 401 });
   }
 
   try {
-    const chat = await getChatById({ id });
+    // Check if chat exists and belongs to the user
+    const { data: chat } = await supabase
+      .from('chats')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', session.user.id)
+      .single();
 
-    if (chat.userId !== session.user.id) {
-      return new Response('Unauthorized', { status: 401 });
+    if (!chat) {
+      return new Response('Not Found', { status: 404 });
     }
 
-    await deleteChatById({ id });
+    // Delete the chat
+    await supabase
+      .from('chats')
+      .delete()
+      .eq('id', id);
+      
+    // Delete all messages associated with the chat
+    await supabase
+      .from('messages')
+      .delete()
+      .eq('chat_id', id);
 
-    return new Response('Chat deleted', { status: 200 });
+    return new Response('OK', { status: 200 });
   } catch (error) {
-    return new Response('An error occurred while processing your request', {
-      status: 500,
-    });
+    console.error('Failed to delete chat', error);
+    return new Response('Internal Server Error', { status: 500 });
   }
 }

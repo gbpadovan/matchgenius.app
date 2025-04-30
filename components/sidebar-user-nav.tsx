@@ -1,8 +1,8 @@
 'use client';
 import { ChevronUp } from 'lucide-react';
 import Image from 'next/image';
-import type { User } from 'next-auth';
-import { signOut } from 'next-auth/react';
+import type { User } from '@supabase/supabase-js';
+import { signOut } from '@/app/(auth)/actions';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 import { HomeIcon, CreditCardIcon, SettingsIcon } from '@/components/icons';
@@ -21,7 +21,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 
-export function SidebarUserNav({ user }: { user: User }) {
+export function SidebarUserNav({ user }: { user: User | null }) {
   const { setTheme, theme } = useTheme();
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
@@ -37,14 +37,15 @@ export function SidebarUserNav({ user }: { user: User }) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent bg-background data-[state=open]:text-sidebar-accent-foreground h-10 w-full">
-              <div className="flex items-center gap-2">
-                <Image
-                  src={`https://avatar.vercel.sh/${user.email}`}
-                  alt={user.email ?? 'User Avatar'}
-                  width={24}
-                  height={24}
-                  className="rounded-full"
-                />
+              <div className="flex items-center gap-2 p-2">
+                <div className="rounded-full overflow-hidden h-8 w-8 bg-primary/10">
+                  <Image
+                    src={`/avatars/0${Math.floor(Math.random() * 8) + 1}.png`}
+                    alt={user?.email || 'User'}
+                    width={32}
+                    height={32}
+                  />
+                </div>
                 <span className="truncate flex-1 text-left">{user?.email}</span>
                 <ChevronUp className="h-4 w-4 shrink-0" />
               </div>
@@ -88,11 +89,7 @@ export function SidebarUserNav({ user }: { user: User }) {
               <button
                 type="button"
                 className="w-full cursor-pointer"
-                onClick={() => {
-                  signOut({
-                    redirectTo: '/',
-                  });
-                }}
+                onClick={() => signOut()}
               >
                 Sign out
               </button>

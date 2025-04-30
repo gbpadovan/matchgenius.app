@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { Session } from 'next-auth';
+import { Session } from '@supabase/supabase-js';
 import { DataStreamWriter, streamObject, tool } from 'ai';
-import { getDocumentById, saveSuggestions } from '@/lib/db/queries';
-import { Suggestion } from '@/lib/db/schema';
+import { getDocumentsById } from '@/lib/supabase/db';
+import { Document } from '@/lib/types';
 import { generateUUID } from '@/lib/utils';
 import { myProvider } from '../models';
 

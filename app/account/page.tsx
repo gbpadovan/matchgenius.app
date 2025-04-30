@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { ManageSubscriptionButton } from './manage-subscription-button';
 import { DatingAppHeader } from '@/components/dating-app-header';
 import { ArrowLeft } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+import { useSupabaseAuth } from '@/components/providers/supabase-auth-provider';
 
 interface AccountPageProps {
   initialSubscription?: any;
@@ -22,7 +22,7 @@ export default function AccountPage({ initialSubscription }: AccountPageProps) {
   const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const session = useSession();
+  const { session, user: supabaseUser } = useSupabaseAuth();
 
   // Pass initialSubscription to useSubscription hook
   const { 

@@ -1,7 +1,7 @@
 import { DataStreamWriter, tool } from 'ai';
-import { Session } from 'next-auth';
+import { Session } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { getDocumentById, saveDocument } from '@/lib/db/queries';
+import { getDocumentsById, saveDocument } from '@/lib/supabase/db';
 import { documentHandlersByBlockKind } from '@/lib/blocks/server';
 
 interface UpdateDocumentProps {
@@ -19,42 +19,52 @@ export const updateDocument = ({ session, dataStream }: UpdateDocumentProps) =>
         .describe('The description of changes that need to be made'),
     }),
     execute: async ({ id, description }) => {
-      const document = await getDocumentById({ id });
+      // Get the document
+      const { data, error } = await getDocumentsById({ id });
+      const document = data?.[0];
 
-      if (!document) {
+      if (error || !document) {
         return {
-          error: 'Document not found',
+          success: false,
+          error: error?.message || 'Document not found',
         };
       }
 
-      dataStream.writeData({
-        type: 'clear',
-        content: document.title,
-      });
+      try {
+        // Get the block handler for this document kind
+        const handler = documentHandlersByBlockKind[document.kind];
 
-      const documentHandler = documentHandlersByBlockKind.find(
-        (documentHandlerByBlockKind) =>
-          documentHandlerByBlockKind.kind === document.kind,
-      );
+        if (!handler) {
+          return {
+            success: false,
+            error: `No handler found for document kind: ${document.kind}`,
+          };
+        }
 
-      if (!documentHandler) {
-        throw new Error(`No document handler found for kind: ${document.kind}`);
+        // Update the document with the handler
+        const updatedContent = await handler.update({
+          document,
+          description,
+          session,
+          dataStream,
+        });
+
+        // Save the updated document
+        await saveDocument({
+          id: document.id,
+          title: document.title,
+          kind: document.kind,
+          content: updatedContent,
+          userId: session.user.id,
+        });
+
+        return { success: true };
+      } catch (error) {
+        console.error('Error updating document:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        };
       }
-
-      await documentHandler.onUpdateDocument({
-        document,
-        description,
-        dataStream,
-        session,
-      });
-
-      dataStream.writeData({ type: 'finish', content: '' });
-
-      return {
-        id,
-        title: document.title,
-        kind: document.kind,
-        content: 'The document has been updated successfully.',
-      };
     },
   });

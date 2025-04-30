@@ -1,5 +1,4 @@
-import { auth } from '@/app/(auth)/auth';
-import { getVotesByChatId, voteMessage } from '@/lib/db/queries';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,40 +8,63 @@ export async function GET(request: Request) {
     return new Response('chatId is required', { status: 400 });
   }
 
-  const session = await auth();
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
 
-  if (!session || !session.user || !session.user.email) {
+  if (!session || !session.user) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const votes = await getVotesByChatId({ id: chatId });
+  // Get votes for the chat
+  const { data: votes } = await supabase
+    .from('votes')
+    .select('*')
+    .eq('chat_id', chatId);
 
   return Response.json(votes, { status: 200 });
 }
 
 export async function PATCH(request: Request) {
-  const {
-    chatId,
-    messageId,
-    type,
-  }: { chatId: string; messageId: string; type: 'up' | 'down' } =
-    await request.json();
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
 
-  if (!chatId || !messageId || !type) {
-    return new Response('messageId and type are required', { status: 400 });
-  }
-
-  const session = await auth();
-
-  if (!session || !session.user || !session.user.email) {
+  if (!session || !session.user) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  await voteMessage({
-    chatId,
-    messageId,
-    type: type,
-  });
+  const { chatId, messageId, type } = await request.json();
 
-  return new Response('Message voted', { status: 200 });
+  if (!chatId || !messageId || !type) {
+    return new Response('chatId, messageId, and type are required', {
+      status: 400,
+    });
+  }
+
+  // Check if vote exists
+  const { data: existingVotes } = await supabase
+    .from('votes')
+    .select('*')
+    .eq('chat_id', chatId)
+    .eq('message_id', messageId)
+    .eq('user_id', session.user.id);
+    
+  if (existingVotes && existingVotes.length > 0) {
+    // Update existing vote
+    await supabase
+      .from('votes')
+      .update({ type })
+      .eq('id', existingVotes[0].id);
+  } else {
+    // Create new vote
+    await supabase
+      .from('votes')
+      .insert({
+        chat_id: chatId,
+        message_id: messageId,
+        user_id: session.user.id,
+        type
+      });
+  }
+
+  return Response.json({ success: true }, { status: 200 });
 }

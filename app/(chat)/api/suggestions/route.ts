@@ -1,5 +1,4 @@
-import { auth } from '@/app/(auth)/auth';
-import { getSuggestionsByDocumentId } from '@/lib/db/queries';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,17 +8,20 @@ export async function GET(request: Request) {
     return new Response('Not Found', { status: 404 });
   }
 
-  const session = await auth();
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
 
   if (!session || !session.user) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const suggestions = await getSuggestionsByDocumentId({
-    documentId,
-  });
+  // Get suggestions for the document
+  const { data: suggestions } = await supabase
+    .from('suggestions')
+    .select('*')
+    .eq('document_id', documentId);
 
-  const [suggestion] = suggestions;
+  const [suggestion] = suggestions || [];
 
   if (!suggestion) {
     return Response.json([], { status: 200 });

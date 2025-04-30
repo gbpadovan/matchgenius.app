@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/use-subscription';
-import { useSession } from 'next-auth/react';
+import { useSupabaseAuth } from '@/components/providers/supabase-auth-provider';
 
 interface SubscriptionUpdaterProps {
   initialSubscription?: any;
@@ -14,7 +14,8 @@ export function SubscriptionUpdater({ initialSubscription }: SubscriptionUpdater
   const router = useRouter();
   const searchParams = useSearchParams();
   const { subscription, refreshSubscription } = useSubscription();
-  const { status: sessionStatus } = useSession();
+  const { session, isLoading } = useSupabaseAuth();
+  const sessionStatus = isLoading ? 'loading' : session ? 'authenticated' : 'unauthenticated';
   const [hasAttemptedUpdate, setHasAttemptedUpdate] = useState(false);
   const success = searchParams.get('success');
   

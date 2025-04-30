@@ -3,11 +3,7 @@
 import { generateText, Message } from 'ai';
 import { cookies } from 'next/headers';
 
-import {
-  deleteMessagesByChatIdAfterTimestamp,
-  getMessageById,
-  updateChatVisiblityById,
-} from '@/lib/db/queries';
+import { createClient } from '@/lib/supabase/server';
 import { VisibilityType } from '@/components/visibility-selector';
 import { myProvider } from '@/lib/ai/models';
 
@@ -35,12 +31,23 @@ export async function generateTitleFromUserMessage({
 }
 
 export async function deleteTrailingMessages({ id }: { id: string }) {
-  const [message] = await getMessageById({ id });
+  const supabase = await createClient();
+  
+  // Get the message
+  const { data: message } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('id', id)
+    .single();
 
-  await deleteMessagesByChatIdAfterTimestamp({
-    chatId: message.chatId,
-    timestamp: message.createdAt,
-  });
+  if (message) {
+    // Delete messages created after this message in the same chat
+    await supabase
+      .from('messages')
+      .delete()
+      .eq('chat_id', message.chat_id)
+      .gte('created_at', message.created_at);
+  }
 }
 
 export async function updateChatVisibility({
@@ -50,5 +57,10 @@ export async function updateChatVisibility({
   chatId: string;
   visibility: VisibilityType;
 }) {
-  await updateChatVisiblityById({ chatId, visibility });
+  const supabase = await createClient();
+  
+  await supabase
+    .from('chats')
+    .update({ visibility })
+    .eq('id', chatId);
 }
