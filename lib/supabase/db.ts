@@ -351,3 +351,51 @@ export async function createOrUpdateSubscription({
   
   return true;
 }
+
+export async function getSubscriptionByStripeSubscriptionId(stripeSubscriptionId: string) {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('stripe_subscription_id', stripeSubscriptionId)
+    .maybeSingle();
+  
+  if (error) {
+    console.error('Failed to get subscription by Stripe subscription ID:', error);
+    throw error;
+  }
+  
+  return { data };
+}
+
+export async function updateSubscriptionStatus(
+  stripeSubscriptionId: string,
+  status: string
+) {
+  const supabase = await createClient();
+  
+  // Get the current subscription to preserve other fields
+  const { data: subscription } = await getSubscriptionByStripeSubscriptionId(stripeSubscriptionId);
+  
+  if (!subscription) {
+    console.error(`Subscription not found for ID: ${stripeSubscriptionId}`);
+    throw new Error(`Subscription not found for ID: ${stripeSubscriptionId}`);
+  }
+  
+  // Update only the status and updated_at fields
+  const { error } = await supabase
+    .from('subscriptions')
+    .update({
+      status,
+      updated_at: new Date().toISOString()
+    })
+    .eq('stripe_subscription_id', stripeSubscriptionId);
+  
+  if (error) {
+    console.error('Failed to update subscription status:', error);
+    throw error;
+  }
+  
+  return true;
+}

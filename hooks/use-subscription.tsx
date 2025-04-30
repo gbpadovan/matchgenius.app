@@ -142,29 +142,44 @@ export function SubscriptionProvider({
   };
   
   const isSubscribed = (() => {
+    // Add debug logging to help diagnose issues
+    console.log('Checking subscription status:', {
+      hasSubscription: !!subscription,
+      subscriptionId: subscription?.stripeSubscriptionId,
+      periodEnd: subscription?.stripeCurrentPeriodEnd,
+      status: subscription?.status
+    });
+    
     if (!subscription) return false;
     if (!subscription.stripeSubscriptionId) return false;
-    if (!subscription.stripeCurrentPeriodEnd) return false;
     
-    try {
-      // Handle different date formats safely
-      const periodEnd = subscription.stripeCurrentPeriodEnd instanceof Date 
-        ? subscription.stripeCurrentPeriodEnd 
-        : new Date(subscription.stripeCurrentPeriodEnd);
-      
-      if (isNaN(periodEnd.getTime())) {
-        console.error('Invalid date format for subscription period end:', subscription.stripeCurrentPeriodEnd);
+    // If we have a subscription ID from Stripe, consider it valid
+    // This is a more reliable indicator than checking period end dates
+    if (subscription.status === 'active' || subscription.status === 'trialing') {
+      return true;
+    }
+    
+    // Fallback to checking period end date if status is not available
+    if (subscription.stripeCurrentPeriodEnd) {
+      try {
+        // Handle different date formats safely
+        const periodEnd = subscription.stripeCurrentPeriodEnd instanceof Date 
+          ? subscription.stripeCurrentPeriodEnd 
+          : new Date(subscription.stripeCurrentPeriodEnd);
+        
+        if (isNaN(periodEnd.getTime())) {
+          console.error('Invalid date format for subscription period end:', subscription.stripeCurrentPeriodEnd);
+          return false;
+        }
+        
+        return periodEnd.getTime() > Date.now();
+      } catch (e) {
+        console.error('Error calculating subscription status:', e);
         return false;
       }
-      
-      const isPeriodValid = periodEnd.getTime() > Date.now();
-      const hasValidStatus = subscription.status === 'active' || subscription.status === 'trialing';
-      
-      return isPeriodValid && hasValidStatus;
-    } catch (e) {
-      console.error('Error calculating subscription status:', e);
-      return false;
     }
+    
+    return false;
   })();
   
   return (

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/app/(auth)/auth';
-import { createOrUpdateSubscription, getSubscriptionByUserId } from '@/lib/db/queries';
+import { auth } from '@/lib/supabase/auth';
+import { createClient } from '@/lib/supabase/server';
+import { createOrUpdateSubscription } from '@/lib/supabase/db';
 import { stripe } from '@/lib/stripe';
 
 export async function POST(req: Request) {
@@ -69,11 +70,19 @@ export async function POST(req: Request) {
       status: subscription.status,
     });
     
+    // Get the supabase client
+    const supabase = await createClient();
+    
     // Return the updated subscription
-    const updatedSubscription = await getSubscriptionByUserId(session.user.id);
+    const { data: subscriptions } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .single();
+    
     console.log('Update Subscription API: Returning updated subscription');
     
-    return NextResponse.json(updatedSubscription);
+    return NextResponse.json(subscriptions);
   } catch (error: any) {
     console.error('Error updating subscription:', error);
     return NextResponse.json(

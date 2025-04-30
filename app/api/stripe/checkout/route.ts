@@ -1,5 +1,5 @@
-import { auth } from '@/app/(auth)/auth';
-import { createOrUpdateSubscription } from '@/lib/db/queries';
+import { auth } from '@/lib/supabase/auth';
+import { createOrUpdateSubscription } from '@/lib/supabase/db';
 import { stripe } from '@/lib/stripe';
 import { NextResponse } from 'next/server';
 

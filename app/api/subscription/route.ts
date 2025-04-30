@@ -40,7 +40,25 @@ export async function GET() {
     
     console.log(`Subscription API: Retrieved subscription data in ${duration}ms:`, subscription);
     
-    return NextResponse.json(subscription || null);
+    // Transform the subscription data from Supabase format to client format
+    if (subscription) {
+      const transformedSubscription = {
+        id: subscription.id,
+        userId: subscription.user_id,
+        stripeCustomerId: subscription.stripe_customer_id,
+        stripeSubscriptionId: subscription.stripe_subscription_id,
+        stripePriceId: subscription.stripe_price_id,
+        stripeCurrentPeriodEnd: subscription.stripe_current_period_end,
+        status: subscription.status,
+        createdAt: subscription.created_at,
+        updatedAt: subscription.updated_at
+      };
+      
+      console.log('Subscription API: Transformed subscription data:', transformedSubscription);
+      return NextResponse.json(transformedSubscription);
+    }
+    
+    return NextResponse.json(null);
   } catch (error: any) {
     console.error('Error fetching subscription:', error);
     return NextResponse.json(
