@@ -67,7 +67,8 @@ export default function SupabaseAuthProvider({
         
         // Set up auth state listener
         authListener = await supabase.auth.onAuthStateChange(
-          async (_event, session) => {
+          async (event, session) => {
+            console.log('Supabase Auth Event:', event, session); // Add logging for event type
             setSession(session)
             
             // Get authenticated user data when auth state changes
@@ -83,7 +84,12 @@ export default function SupabaseAuthProvider({
               setUser(null)
             }
             
-            router.refresh()
+            // Only refresh the router for sign-in and sign-out events
+            // Avoid refreshing on TOKEN_REFRESHED or USER_UPDATED to prevent loops
+            if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+              console.log('Refreshing router due to event:', event); // Log when refreshing
+              router.refresh()
+            }
           }
         )
       } catch (error) {
