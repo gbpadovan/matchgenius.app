@@ -4,9 +4,10 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    // Use getUser instead of getSession for security
+    const { data: userData, error: userError } = await supabase.auth.getUser();
     
-    if (!session?.user || !session.user.id || !session.user.email) {
+    if (userError || !userData?.user || !userData.user.id || !userData.user.email) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -17,7 +18,7 @@ export async function GET() {
     const { data: users, error } = await supabase
       .from('users')
       .select('*')
-      .eq('email', session.user.email);
+      .eq('email', userData.user.email);
     
     if (error) {
       throw error;
@@ -30,8 +31,8 @@ export async function GET() {
         .from('users')
         .insert([
           { 
-            id: session.user.id,
-            email: session.user.email,
+            id: userData.user.id,
+            email: userData.user.email,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }
@@ -55,12 +56,12 @@ export async function GET() {
     }
     
     // Return the user data (excluding sensitive information like password)
-    const userData = {
+    const userResponse = {
       id: users[0].id,
       email: users[0].email
     };
     
-    return NextResponse.json(userData);
+    return NextResponse.json(userResponse);
   } catch (error: any) {
     console.error('Error fetching user data:', error);
     return NextResponse.json(

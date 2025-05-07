@@ -5,10 +5,10 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
-    // Get user from session
-    const session = await auth();
+    // Get authenticated user data securely
+    const authData = await auth();
     
-    if (!session?.user || !session.user.id) {
+    if (!authData?.user || !authData.user.id) {
       return NextResponse.json(
         { error: 'You must be logged in to access the customer portal' },
         { status: 401 }
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     }
     
     // Get the user's subscription from our database
-    const subscription = await getSubscriptionByUserId(session.user.id);
+    const subscription = await getSubscriptionByUserId(authData.user.id);
     
     if (!subscription || !subscription.stripeCustomerId) {
       return NextResponse.json(

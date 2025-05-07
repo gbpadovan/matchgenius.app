@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { SubscriptionGuard } from '@/components/subscription-guard';
-import { createClient } from '@/lib/supabase/server';
+import { authenticateUser } from '@/lib/supabase/auth-helpers';
 import Script from 'next/script';
 
 export const experimental_ppr = true;
@@ -15,10 +15,9 @@ export default async function Layout({
 }) {
   // Need to await cookies() in Next.js 15
   const cookieStore = await cookies();
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  // Use the secure authentication helper
+  const { authenticated, user, supabase } = await authenticateUser();
   const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
-  const user = session?.user || null;
 
   return (
     <>

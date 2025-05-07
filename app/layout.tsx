@@ -3,6 +3,7 @@ import { Toaster } from 'sonner';
 
 import { Providers } from '@/components/providers/index';
 import { SubscriptionProvider } from '@/hooks/use-subscription';
+import { getAuthenticatedUser, getAuthSession } from '@/lib/supabase/helpers';
 import { createClient } from '@/lib/supabase/server';
 
 import './globals.css';
@@ -42,24 +43,32 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Fetch the user's subscription
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  let subscription = null;
+  // Get authenticated user with the helper (avoids warning)
+  const { user } = await getAuthenticatedUser();
   
-  if (session?.user?.id) {
+  // Get session separately for client-side use (doesn't cause warnings)
+  const { session } = await getAuthSession();
+  
+  // Only fetch subscription if we have a valid user
+  let subscription = null;
+  if (user?.id) {
     try {
-      // Get subscription from Supabase
-      const { data: subscriptionData } = await supabase
+      // Initialize Supabase client
+      const supabase = await createClient();
+      
+      // Get subscription data safely
+      const { data: subscriptionData, error } = await supabase
         .from('subscriptions')
         .select('*')
-        .eq('user_id', session.user.id)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
       
-      subscription = subscriptionData;
-      console.log('Root Layout: Fetched initial subscription data for user:', session.user.id);
+      if (subscriptionData && !error) {
+        subscription = subscriptionData;
+      }
     } catch (error) {
-      console.error('Root Layout: Error fetching subscription data:', error);
+      // Silent error handling to avoid breaking the layout
+      console.error('Error fetching subscription:', error);
     }
   }
   
@@ -76,7 +85,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <Providers>
+        <Providers initialSession={session}>
           <SubscriptionProvider initialSubscription={subscription}>
             <Toaster position="top-center" />
             {children}

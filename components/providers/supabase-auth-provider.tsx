@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Session, User } from '@supabase/supabase-js'
 
@@ -26,213 +26,174 @@ export const useSupabaseAuth = () => {
   return useContext(SupabaseAuthContext)
 }
 
-// Helper function to debounce function calls
-function debounce(func: Function, wait: number) {
-  let timeout: NodeJS.Timeout | null = null
-  return function(...args: any[]) {
-    if (timeout) clearTimeout(timeout)
-    timeout = setTimeout(() => func(...args), wait)
-  }
-}
-
 export default function SupabaseAuthProvider({
   children,
+  initialSession = null,
 }: {
   children: React.ReactNode
+  initialSession?: Session | null
 }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(initialSession?.user || null)
+  const [session, setSession] = useState<Session | null>(initialSession)
+  const [isLoading, setIsLoading] = useState(!initialSession)
   const [error, setError] = useState<Error | null>(null)
   const router = useRouter()
   const supabase = createClient()
   
-  // Track auth state to prevent loops
-  const lastEventRef = useRef<string | null>(null)
-  const lastUserIdRef = useRef<string | null>(null)
-  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const authListenerRef = useRef<any>(null)
-  const isRefreshingRef = useRef<boolean>(false)
-  const lastRefreshTimeRef = useRef<number>(0)
-  
-  // Minimum time between auth refreshes (5 seconds)
-  const MIN_REFRESH_INTERVAL = 5000
-
-  // Create a debounced router refresh function
-  const debouncedRefresh = useRef(
-    debounce(() => {
-      console.log('Executing debounced router refresh')
-      router.refresh()
-    }, 1000) // Increased debounce time to 1 second
-  ).current
-  
-  // Function to fetch user data safely
-  const fetchUserData = useCallback(async () => {
+  /**
+   * Function to refresh authentication data safely.
+   */
+  const refreshAuth = async (force = false) => {
+    if (!force && session && user) {
+      return
+    }
+    
     try {
-      const now = Date.now()
-      const timeSinceLastRefresh = now - lastRefreshTimeRef.current
+      setIsLoading(true)
       
-      // Prevent rapid consecutive refreshes
-      if (isRefreshingRef.current || timeSinceLastRefresh < MIN_REFRESH_INTERVAL) {
-        console.log(`Skipping auth refresh, last refresh was ${timeSinceLastRefresh}ms ago`)
+      // Always get user first to ensure security
+      // This validates with the Supabase Auth server
+      const { data: userData, error: userError } = await supabase.auth.getUser()
+      
+      if (userError) {
+        console.warn('Warning getting user data:', userError.message)
+        // Clear user state on error
+        setUser(null)
+        setSession(null)
         return
       }
       
-      isRefreshingRef.current = true
-      lastRefreshTimeRef.current = now
-      
-      // Get the session
-      const { data: { session: newSession }, error: sessionError } = await supabase.auth.getSession()
-      
-      if (sessionError) {
-        throw sessionError
-      }
-      
-      // Only update session if it's different
-      const sessionChanged = 
-        (!session && newSession) || 
-        (session && !newSession) || 
-        (session?.user?.id !== newSession?.user?.id)
-      
-      if (sessionChanged) {
-        setSession(newSession)
-      }
-      
-      // Get authenticated user data
-      if (newSession) {
-        const { data: { user: newUser }, error: userError } = await supabase.auth.getUser()
+      if (userData?.user) {
+        setUser(userData.user)
         
-        if (userError) {
-          throw userError
+        // Set the session from the user data response
+        // This is safer than using getSession() directly
+        if (userData?.session) {
+          setSession(userData.session)
+        } else {
+          // User exists but no session, which is unusual
+          console.warn('User exists but no session found')
+          setSession(null)
         }
-        
-        // Only update user if it's different
-        if (newUser && (!user || user.id !== newUser.id)) {
-          setUser(newUser)
-          lastUserIdRef.current = newUser.id
-        }
-      } else if (user) {
-        // Clear user if session is gone
+      } else {
+        // No valid user, clear state
         setUser(null)
-        lastUserIdRef.current = null
+        setSession(null)
       }
-    } catch (error) {
-      console.error('Error fetching auth data:', error)
-      setError(error as Error)
-    } finally {
-      isRefreshingRef.current = false
-    }
-  }, [supabase, user, session])
-  
-  // Public method to refresh auth state
-  const refreshAuth = useCallback(async () => {
-    await fetchUserData()
-  }, [fetchUserData])
-
-  // Initialize auth state and set up listeners
-  useEffect(() => {
-    async function initializeAuth() {
-      try {
-        setIsLoading(true)
-        await fetchUserData()
-        
-        // Set up auth state listener if not already set
-        if (!authListenerRef.current) {
-          const { data } = await supabase.auth.onAuthStateChange(
-            async (event, newSession) => {
-              // Skip TOKEN_REFRESHED events entirely to prevent loops
-              if (event === 'TOKEN_REFRESHED') {
-                console.log('Ignoring TOKEN_REFRESHED event to prevent loops')
-                return
-              }
-              
-              // Prevent handling duplicate events
-              const isDuplicate = 
-                lastEventRef.current === event && 
-                ((newSession?.user?.id === lastUserIdRef.current) || 
-                 (!newSession && !lastUserIdRef.current))
-              
-              if (isDuplicate) {
-                console.log('Ignoring duplicate auth event:', event)
-                return
-              }
-              
-              console.log('Supabase Auth Event:', event)
-              lastEventRef.current = event
-              
-              // Update session state
-              setSession(newSession)
-              
-              // Get authenticated user data when auth state changes
-              if (newSession) {
-                try {
-                  const { data: { user: newUser }, error: userError } = await supabase.auth.getUser()
-                  
-                  if (userError) {
-                    console.error('Error getting user:', userError)
-                  } else {
-                    setUser(newUser)
-                    lastUserIdRef.current = newUser.id
-                  }
-                } catch (error) {
-                  console.error('Error in auth state change handler:', error)
-                }
-              } else {
-                setUser(null)
-                lastUserIdRef.current = null
-              }
-              
-              // Only refresh the router for sign-in and sign-out events
-              if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-                console.log('Triggering router refresh due to event:', event)
-                
-                // Clear any existing timeout
-                if (refreshTimeoutRef.current) {
-                  clearTimeout(refreshTimeoutRef.current)
-                }
-                
-                // Use the debounced refresh
-                debouncedRefresh()
-              }
-            }
-          )
-          
-          authListenerRef.current = data
-        }
-      } catch (error) {
-        setError(error as Error)
-        console.error('Error initializing auth:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    initializeAuth()
-    
-    return () => {
-      // Clean up the subscription when the component unmounts
-      if (authListenerRef.current) {
-        authListenerRef.current.subscription.unsubscribe()
-        authListenerRef.current = null
-      }
+    } catch (err) {
+      console.error('Error refreshing auth:', err)
       
-      // Clear any pending timeouts
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current)
+      // Don't update state on error to prevent loops
+      if (err instanceof Error && err.message.includes('Auth session missing')) {
+        console.log('Session missing, silently handling')
+      } else {
+        setError(err as Error)
       }
+    } finally {
+      setIsLoading(false)
     }
-  }, [supabase, debouncedRefresh, fetchUserData])
-
-  const value = {
-    user,
-    session,
-    isLoading,
-    error,
-    refreshAuth
   }
 
+  // Setup auth listener with proper error handling
+  useEffect(() => {
+    let isActive = true
+    let authListener: { subscription: { unsubscribe: () => void } } | null = null
+    
+    const setupAuth = async () => {
+      try {
+        // Always start by getting authenticated user data from the server
+        // regardless of initial session to ensure security
+        const { data: userData, error: userError } = await supabase.auth.getUser()
+        
+        if (isActive) {
+          if (userData?.user) {
+            setUser(userData.user)
+            // Set the session from the user data response
+            // This is safer than using getSession() directly
+            if (userData?.session) {
+              setSession(userData.session)
+            }
+          } else if (initialSession) {
+            // We have an initial session but no valid user - this is unusual
+            console.warn('Initial session provided but no valid user found')
+            setSession(null)
+            setUser(null)
+          }
+        }
+        
+        // Set up auth state listener with error handling
+        authListener = supabase.auth.onAuthStateChange(
+          async (event: string, newSession: Session | null) => {
+            if (!isActive) return
+            
+            try {
+              // Throttle TOKEN_REFRESHED events that can cause loops
+              if (event === 'TOKEN_REFRESHED') {
+                // Only update session for token refresh, don't trigger other actions
+                if (newSession) setSession(newSession)
+                return
+              }
+              
+              // Handle critical auth events
+              if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+                // For all auth events, ALWAYS validate the user with getUser()
+                // before updating state to ensure security
+                const { data, error } = await supabase.auth.getUser()
+                
+                if (!error && data?.user && isActive) {
+                  setUser(data.user)
+                  setSession(newSession)
+                } else {
+                  // No valid user or error occurred
+                  setUser(null)
+                  setSession(null)
+                }
+                
+                // Only refresh router for sign in/out
+                if ((event === 'SIGNED_IN' || event === 'SIGNED_OUT') && isActive) {
+                  // Use a timeout to prevent immediate refreshes
+                  setTimeout(() => {
+                    if (isActive) router.refresh()
+                  }, 100)
+                }
+              }
+            } catch (err) {
+              console.error(`Error handling auth event ${event}:`, err)
+            }
+          }
+        )
+      } catch (err) {
+        console.error('Error setting up auth:', err)
+      } finally {
+        if (isActive) setIsLoading(false)
+      }
+    }
+    
+    setupAuth()
+    
+    // Cleanup function
+    return () => {
+      isActive = false
+      if (authListener && authListener.subscription) {
+        try {
+          authListener.subscription.unsubscribe()
+        } catch (e) {
+          console.error('Error unsubscribing from auth events:', e)
+        }
+      }
+    }
+  }, [supabase, initialSession, router, refreshAuth])
+
   return (
-    <SupabaseAuthContext.Provider value={value}>
+    <SupabaseAuthContext.Provider
+      value={{
+        user,
+        session,
+        isLoading,
+        error,
+        refreshAuth: () => refreshAuth(true)
+      }}
+    >
       {children}
     </SupabaseAuthContext.Provider>
   )

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { authenticateUser, createUnauthorizedResponse } from '@/lib/supabase/auth-helpers';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -8,11 +8,12 @@ export async function GET(request: Request) {
     return new Response('Not Found', { status: 404 });
   }
 
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session || !session.user) {
-    return new Response('Unauthorized', { status: 401 });
+  // Use the secure authentication helper
+  const { authenticated, user, supabase, error } = await authenticateUser();
+  
+  if (!authenticated || !user) {
+    console.error('Authentication error:', error);
+    return createUnauthorizedResponse();
   }
 
   // Get suggestions for the document
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
     return Response.json([], { status: 200 });
   }
 
-  if (suggestion.userId !== session.user.id) {
+  if (suggestion.userId !== user.id) { // Use user.id instead of session.user.id
     return new Response('Unauthorized', { status: 401 });
   }
 

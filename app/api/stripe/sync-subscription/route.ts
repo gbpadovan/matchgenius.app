@@ -10,17 +10,17 @@ export async function POST(req: Request) {
   try {
     console.log('Sync Subscription API: Request received');
     
-    // Get user from session
-    const session = await auth();
+    // Get authenticated user data securely
+    const authData = await auth();
     
-    console.log('Sync Subscription API: Session data:', {
-      authenticated: !!session?.user,
-      userId: session?.user?.id,
-      email: session?.user?.email
+    console.log('Sync Subscription API: User data:', {
+      authenticated: !!authData?.user,
+      userId: authData?.user?.id,
+      email: authData?.user?.email
     });
     
-    if (!session?.user || !session.user.id || !session.user.email) {
-      console.log('Sync Subscription API: Unauthorized - No valid session');
+    if (!authData?.user || !authData.user.id || !authData.user.email) {
+      console.log('Sync Subscription API: Unauthorized - No valid user');
       return NextResponse.json(
         { error: 'You must be logged in to sync subscription' },
         { status: 401 }
@@ -31,13 +31,13 @@ export async function POST(req: Request) {
     const { userId, stripeSubscriptionId } = await req.json();
     
     // Admin check - only allow admins to specify a different userId
-    if (userId && userId !== session.user.id) {
+    if (userId && userId !== authData.user.id) {
       // Check if current user is an admin
       const supabase = await createClient();
       const { data: userData } = await supabase
         .from('users')
         .select('role')
-        .eq('id', session.user.id)
+        .eq('id', authData.user.id)
         .single();
         
       if (!userData || userData.role !== 'admin') {
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       }
     }
     
-    const targetUserId = userId || session.user.id;
+    const targetUserId = userId || authData.user.id;
     console.log(`Sync Subscription API: Syncing subscription for user ${targetUserId}`);
     
     // If subscription ID is provided, sync that specific subscription

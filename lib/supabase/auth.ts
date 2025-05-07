@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr';
 /**
  * Server-side authentication utility function
  * Returns the user session and user data from Supabase Auth
+ * Uses getUser() for secure authentication instead of relying on session data directly
  */
 export async function auth() {
   const cookieStore = await cookies();
@@ -26,26 +27,24 @@ export async function auth() {
     }
   );
   
-  // Get the session
-  const { data: { session } } = await supabase.auth.getSession();
+  // Use getUser() for secure authentication
+  // This also returns the session data securely
+  const { data: userData, error: userError } = await supabase.auth.getUser();
   
-  if (!session) {
+  if (userError || !userData?.user) {
     return null;
   }
   
-  // Get the user
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    return null;
-  }
+  // We still need to get the session, but we can do it safely now that we've validated the user
+  const { data: sessionData } = await supabase.auth.getSession();
   
   return {
     user: {
-      id: user.id,
-      email: user.email,
-      name: user.user_metadata?.name || null,
+      id: userData.user.id,
+      email: userData.user.email,
+      name: userData.user.user_metadata?.name || null,
     },
-    session
+    // Use the session from the getSession call, but only after validating the user
+    session: sessionData.session
   };
 }

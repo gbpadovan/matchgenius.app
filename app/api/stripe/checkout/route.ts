@@ -7,10 +7,10 @@ export async function POST(req: Request) {
   try {
     const { priceId } = await req.json();
     
-    // Get user from session
-    const session = await auth();
+    // Get authenticated user data securely
+    const authData = await auth();
     
-    if (!session?.user || !session.user.id || !session.user.email) {
+    if (!authData?.user || !authData.user.id || !authData.user.email) {
       return NextResponse.json(
         { error: 'You must be logged in to subscribe' },
         { status: 401 }
@@ -19,8 +19,8 @@ export async function POST(req: Request) {
     
     // Create or retrieve the customer
     const customer = await createOrRetrieveCustomer({
-      userId: session.user.id,
-      email: session.user.email
+      userId: authData.user.id,
+      email: authData.user.email
     });
     
     // Create the checkout session
@@ -36,11 +36,11 @@ export async function POST(req: Request) {
       // Use the new checkout parameters in Stripe API
       ui_mode: 'hosted',
       metadata: {
-        userId: session.user.id,
+        userId: authData.user.id,
       },
       subscription_data: {
         metadata: {
-          userId: session.user.id,
+          userId: authData.user.id,
         },
       },
       success_url: `${req.headers.get('origin')}/account?success=true`,

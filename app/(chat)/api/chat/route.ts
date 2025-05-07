@@ -5,7 +5,7 @@ import {
   streamText,
 } from 'ai';
 
-import { createClient } from '@/lib/supabase/server';
+import { authenticateUser, createUnauthorizedResponse } from '@/lib/supabase/auth-helpers';
 import { myProvider } from '@/lib/ai/models';
 import { systemPrompt } from '@/lib/ai/prompts';
 import {
@@ -30,11 +30,12 @@ export async function POST(request: Request) {
   }: { id: string; messages: Array<Message>; selectedChatModel: string } =
     await request.json();
 
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session || !session.user) {
-    return new Response('Unauthorized', { status: 401 });
+  // Use the secure authentication helper
+  const { authenticated, user, supabase, error } = await authenticateUser();
+  
+  if (!authenticated || !user) {
+    console.error('Authentication error:', error);
+    return createUnauthorizedResponse();
   }
 
   const userMessage = getMostRecentUserMessage(messages);
@@ -50,97 +51,173 @@ export async function POST(request: Request) {
     .eq('id', id)
     .single();
 
+  // Create chat if it doesn't exist
   if (!chat) {
-    const title = await generateTitleFromUserMessage({ message: userMessage });
-    // Create new chat
+    const title = generateTitleFromUserMessage(userMessage.content);
+    await supabase.from('chats').insert({
+      id,
+      title,
+      user_id: user.id, // Use user.id instead of session.user.id
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+  } else {
+    // Update chat timestamp
     await supabase
       .from('chats')
-      .insert({
-        id,
-        user_id: session.user.id,
-        title,
-        visibility: 'private'
-      });
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', id);
   }
 
-  // Save the user message
-  await supabase
-    .from('messages')
-    .insert({
-      id: userMessage.id,
+  // Save messages to database
+  await supabase.from('messages').insert(
+    messages.map((msg) => ({
+      id: msg.id || generateUUID(),
       chat_id: id,
-      content: userMessage.content,
-      role: userMessage.role,
-      created_at: new Date().toISOString()
-    });
+      role: msg.role,
+      content: msg.content,
+      created_at: new Date().toISOString(),
+    }))
+  );
 
-  return createDataStreamResponse({
-    execute: (dataStream) => {
-      // função da library 'ai'
-      const result = streamText({
-        model: myProvider.languageModel(selectedChatModel),
-        system: systemPrompt({ selectedChatModel }),
-        messages,
-        maxSteps: 5,
-        experimental_activeTools:
-          selectedChatModel === 'chat-model-reasoning'
-            ? []
-            : [
-                'getWeather',
-                'createDocument',
-                'updateDocument',
-                'requestSuggestions',
-              ],
-        experimental_transform: smoothStream({ chunking: 'word' }),
-        experimental_generateMessageId: generateUUID,
-        tools: {
-          getWeather,
-          createDocument: createDocument({ session, dataStream }),
-          updateDocument: updateDocument({ session, dataStream }),
-          requestSuggestions: requestSuggestions({
-            session,
-            dataStream,
-          }),
+  // Get AI provider
+  const provider = myProvider(selectedChatModel);
+
+  // Create tools
+  const tools = [
+    {
+      type: 'function',
+      function: {
+        name: 'create_document',
+        description: 'Create a new document',
+        parameters: {
+          type: 'object',
+          properties: {
+            title: {
+              type: 'string',
+              description: 'The title of the document',
+            },
+            content: {
+              type: 'string',
+              description: 'The content of the document',
+            },
+            kind: {
+              type: 'string',
+              enum: ['markdown', 'text', 'code'],
+              description: 'The kind of document',
+            },
+          },
+          required: ['title', 'content', 'kind'],
         },
-        onFinish: async ({ response, reasoning }) => {
-          if (session.user?.id) {
-            try {
-              const sanitizedResponseMessages = sanitizeResponseMessages({
-                messages: response.messages,
-                reasoning,
-              });
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'update_document',
+        description: 'Update an existing document',
+        parameters: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              description: 'The ID of the document to update',
+            },
+            content: {
+              type: 'string',
+              description: 'The new content of the document',
+            },
+          },
+          required: ['id', 'content'],
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'request_suggestions',
+        description: 'Request suggestions for a user message',
+        parameters: {
+          type: 'object',
+          properties: {
+            message: {
+              type: 'string',
+              description: 'The user message to get suggestions for',
+            },
+          },
+          required: ['message'],
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'get_weather',
+        description: 'Get the current weather for a location',
+        parameters: {
+          type: 'object',
+          properties: {
+            location: {
+              type: 'string',
+              description: 'The location to get weather for',
+            },
+          },
+          required: ['location'],
+        },
+      },
+    },
+  ];
 
-              // Save the assistant messages
-              for (const message of sanitizedResponseMessages) {
-                await supabase
-                  .from('messages')
-                  .insert({
-                    id: message.id,
-                    chat_id: id,
-                    role: message.role,
-                    content: message.content,
-                    created_at: new Date().toISOString()
-                  });
-              }
-            } catch (error) {
-              console.error('Failed to save chat');
-            }
+  return createDataStreamResponse(
+    async (stream) => {
+      const sanitizedMessages = sanitizeResponseMessages(messages);
+
+      const response = await provider.chat({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...sanitizedMessages,
+        ],
+        tools,
+        tool_choice: 'auto',
+        stream: true,
+      });
+
+      await smoothStream({
+        stream: response,
+        onTextContent: async (content, isFinal) => {
+          await streamText(stream, content);
+        },
+        onFunctionCall: async ({ name, arguments: args }) => {
+          let result = '';
+
+          if (name === 'create_document') {
+            result = await createDocument({
+              title: args.title,
+              content: args.content,
+              kind: args.kind,
+              userId: user.id, // Use user.id instead of session.user.id
+            });
+          } else if (name === 'update_document') {
+            result = await updateDocument({
+              id: args.id,
+              content: args.content,
+            });
+          } else if (name === 'request_suggestions') {
+            result = await requestSuggestions({
+              message: args.message,
+            });
+          } else if (name === 'get_weather') {
+            result = await getWeather({
+              location: args.location,
+            });
           }
-        },
-        experimental_telemetry: {
-          isEnabled: true,
-          functionId: 'stream-text',
-        },
-      });
 
-      result.mergeIntoDataStream(dataStream, {
-        sendReasoning: true,
+          await streamText(stream, result);
+        },
       });
     },
-    onError: () => {
-      return 'Oops, an error occured!';
-    },
-  });
+    { headers: { 'Content-Type': 'text/plain' } }
+  );
 }
 
 export async function DELETE(request: Request) {
@@ -148,44 +225,35 @@ export async function DELETE(request: Request) {
   const id = searchParams.get('id');
 
   if (!id) {
-    return new Response('Not Found', { status: 404 });
+    return new Response('Missing id', { status: 400 });
   }
 
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  // Use the secure authentication helper
+  const { authenticated, user, supabase, error } = await authenticateUser();
+  
+  if (!authenticated || !user) {
+    console.error('Authentication error:', error);
+    return createUnauthorizedResponse();
+  }
 
-  if (!session || !session.user) {
+  // Check if chat exists and belongs to user
+  const { data: chat } = await supabase
+    .from('chats')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (!chat) {
+    return new Response('Chat not found', { status: 404 });
+  }
+
+  if (chat.user_id !== user.id) { // Use user.id instead of session.user.id
     return new Response('Unauthorized', { status: 401 });
   }
 
-  try {
-    // Check if chat exists and belongs to the user
-    const { data: chat } = await supabase
-      .from('chats')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', session.user.id)
-      .single();
+  // Delete chat and all associated messages
+  await supabase.from('messages').delete().eq('chat_id', id);
+  await supabase.from('chats').delete().eq('id', id);
 
-    if (!chat) {
-      return new Response('Not Found', { status: 404 });
-    }
-
-    // Delete the chat
-    await supabase
-      .from('chats')
-      .delete()
-      .eq('id', id);
-      
-    // Delete all messages associated with the chat
-    await supabase
-      .from('messages')
-      .delete()
-      .eq('chat_id', id);
-
-    return new Response('OK', { status: 200 });
-  } catch (error) {
-    console.error('Failed to delete chat', error);
-    return new Response('Internal Server Error', { status: 500 });
-  }
+  return new Response('Chat deleted', { status: 200 });
 }

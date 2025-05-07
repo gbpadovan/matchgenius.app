@@ -1,0 +1,243 @@
+
+
+## Project Notes
+
+Add project-specific notes, documentation and guidelines here.
+This file is stored in the project repository.
+
+
+# Detailed Repository Content: **matchgenius.app.supabase**
+
+## Instructions for AI: ⚠️ COMPLETE PROJECT CONTEXT PROVIDED - NO NEED TO REQUEST ADDITIONAL CONTEXT ⚠️
+
+## Quick Reference
+- ✓ = Full content included below
+
+- ✗ = Excluded (not included)
+
+> Generation timestamp: 1746564309.574557  
+> For updates: Use lc-list-modified-files first to identify changes, then lc-get-files for specific files
+> If tools are unavailable, ask the user to run the "lc-changed" CLI command
+
+This context presents a comprehensive view of the _/matchgenius.app.supabase_ repository.
+
+
+## Instructions for AI: 📂 Before Requesting Any Files
+
+1. **SEARCH THIS DOCUMENT** to check if the file is already included
+2. **CHECK the repository structure** below to confirm file status (✓, or ✗)
+3. Only request ✗ files that are absolutely necessary for your analysis
+
+
+
+### How to Request Missing Files
+
+Check if lc-get-files tool is available in your environment before proceeding to option 2.
+
+1. Using the lc-get-files tool (if available in your environment):
+   **ROOT PATH must be: /home/g/dados_/dev/projects/matchgenius/repos/matchgenius.app.supabase**
+   Example request:
+  ```json
+  {
+    "root_path": "/home/g/dados_/dev/projects/matchgenius/repos/matchgenius.app.supabase",
+    "paths": ["/matchgenius.app.supabase/components/toolbar.tsx","/matchgenius.app.supabase/components/block-close-button.tsx"]
+  }
+  ```
+
+2. Only if lc-get-files is not available, follow these steps (do NOT use the above root_path):
+    1. Immediately halt your current response.
+    2. Start a new response with a markdown code block (```) on a new line.
+    3. List the root-relative paths of the missing files you need, one per line.
+    4. Close the markdown code block with another ```.
+    5. End your response.
+
+    Example file request:
+    ```
+    /matchgenius.app.supabase/components/toolbar.tsx
+    /matchgenius.app.supabase/components/block-close-button.tsx
+    ```
+    The human will then provide the requested file contents in the next message.
+
+## Repository Structure
+
+```
+Status: ✗=Excluded
+Format: status path bytes (size) age
+
+✗ /matchgenius.app.supabase/.cursor/rules/general-knowledge.mdc 1443(1.4 KB)66d ago
+✗ /matchgenius.app.supabase/.env.example 702(702.0 B)7d ago
+✗ /matchgenius.app.supabase/.env.example.old 702(702.0 B)13d ago
+✗ /matchgenius.app.supabase/.eslintrc.json 463(463.0 B)84d ago
+✗ /matchgenius.app.supabase/.gitignore 473(473.0 B)80d ago
+✗ /matchgenius.app.supabase/.llm-context/.gitignore 27(27.0 B)0m ago
+✗ /matchgenius.app.supabase/.llm-context/config.yaml 338(338.0 B)0m ago
+✗ /matchgenius.app.supabase/.llm-context/lc-project-notes.md 128(128.0 B)0m ago
+✗ /matchgenius.app.supabase/.llm-context/rules/lc-code.md 927(927.0 B)0m ago
+✗ /matchgenius.app.supabase/.llm-context/rules/lc-gitignores.md 1480(1.4 KB)0m ago
+✗ /matchgenius.app.supabase/.llm-context/templates/lc-context-mcp.j2 2552(2.5 KB)0m ago
+✗ /matchgenius.app.supabase/.llm-context/templates/lc-context.j2 3838(3.7 KB)0m ago
+✗ /matchgenius.app.supabase/.llm-context/templates/lc-definitions.j2 213(213.0 B)0m ago
+✗ /matchgenius.app.supabase/.llm-context/templates/lc-files.j2 155(155.0 B)0m ago
+✗ /matchgenius.app.supabase/.llm-context/templates/lc-highlights.j2 105(105.0 B)0m ago
+✗ /matchgenius.app.supabase/.llm-context/templates/lc-prompt.j2 205(205.0 B)0m ago
+✗ /matchgenius.app.supabase/.serena/project.yml 1861(1.8 KB)23h ago
+✗ /matchgenius.app.supabase/LICENSE 244(244.0 B)84d ago
+✗ /matchgenius.app.supabase/README.md 7851(7.7 KB)6d ago
+✗ /matchgenius.app.supabase/STRIPE-INTEGRATION-STATUS.md 7028(6.9 KB)3d ago
+✗ /matchgenius.app.supabase/SUPABASE_MIGRATION.md 3428(3.3 KB)5d ago
+✗ /matchgenius.app.supabase/app/(auth)/actions.ts 2693(2.6 KB)7d ago
+✗ /matchgenius.app.supabase/app/(auth)/api/auth/[...nextauth]/route.ts 47(47.0 B)84d ago
+✗ /matchgenius.app.supabase/app/(auth)/login/page.tsx 2277(2.2 KB)7d ago
+✗ /matchgenius.app.supabase/app/(auth)/register/page.tsx 2520(2.5 KB)7d ago
+✗ /matchgenius.app.supabase/app/(chat)/actions.ts 1674(1.6 KB)6d ago
+✗ /matchgenius.app.supabase/app/(chat)/api/chat/route.ts 7038(6.9 KB)3d ago
+✗ /matchgenius.app.supabase/app/(chat)/api/document/route.ts 3860(3.8 KB)3d ago
+✗ /matchgenius.app.supabase/app/(chat)/api/files/upload/route.ts 2297(2.2 KB)3d ago
+✗ /matchgenius.app.supabase/app/(chat)/api/history/route.ts 588(588.0 B)3d ago
+✗ /matchgenius.app.supabase/app/(chat)/api/suggestions/route.ts 1055(1.0 KB)3d ago
+✗ /matchgenius.app.supabase/app/(chat)/api/vote/route.ts 1930(1.9 KB)3d ago
+✗ /matchgenius.app.supabase/app/(chat)/chat/[id]/page.tsx 2314(2.3 KB)3d ago
+✗ /matchgenius.app.supabase/app/(chat)/layout.tsx 1141(1.1 KB)3d ago
+✗ /matchgenius.app.supabase/app/(chat)/page.tsx 923(923.0 B)52d ago
+✗ /matchgenius.app.supabase/app/account/edit/page.tsx 10004(9.8 KB)54d ago
+✗ /matchgenius.app.supabase/app/account/layout.tsx 2293(2.2 KB)3d ago
+✗ /matchgenius.app.supabase/app/account/manage-subscription-button.tsx 1076(1.1 KB)56d ago
+✗ /matchgenius.app.supabase/app/account/page.tsx 6630(6.5 KB)5d ago
+✗ /matchgenius.app.supabase/app/account/subscription-updater.tsx 3791(3.7 KB)6d ago
+✗ /matchgenius.app.supabase/app/api/stripe/checkout/route.ts 2547(2.5 KB)3d ago
+✗ /matchgenius.app.supabase/app/api/stripe/portal/route.ts 1337(1.3 KB)3d ago
+✗ /matchgenius.app.supabase/app/api/stripe/products/route.ts 472(472.0 B)56d ago
+✗ /matchgenius.app.supabase/app/api/stripe/sync-subscription/route.ts 12612(12.3 KB)3d ago
+✗ /matchgenius.app.supabase/app/api/stripe/update-subscription/route.ts 3161(3.1 KB)3d ago
+✗ /matchgenius.app.supabase/app/api/stripe/webhook/route.ts 10542(10.3 KB)5d ago
+✗ /matchgenius.app.supabase/app/api/subscription/route.ts 2004(2.0 KB)3d ago
+✗ /matchgenius.app.supabase/app/api/user/route.ts 2051(2.0 KB)3d ago
+✗ /matchgenius.app.supabase/app/auth-error/page.tsx 1100(1.1 KB)7d ago
+✗ /matchgenius.app.supabase/app/auth/callback/route.ts 666(666.0 B)7d ago
+✗ /matchgenius.app.supabase/app/globals.css 6669(6.5 KB)52d ago
+✗ /matchgenius.app.supabase/app/layout.tsx 2921(2.9 KB)3d ago
+✗ /matchgenius.app.supabase/app/pricing/page.tsx 9325(9.1 KB)56d ago
+✗ /matchgenius.app.supabase/biome.jsonc 4637(4.5 KB)84d ago
+✗ /matchgenius.app.supabase/blocks/actions.ts 345(345.0 B)6d ago
+✗ /matchgenius.app.supabase/blocks/image/client.tsx 2063(2.0 KB)84d ago
+✗ /matchgenius.app.supabase/blocks/image/server.ts 1037(1.0 KB)84d ago
+✗ /matchgenius.app.supabase/blocks/text/client.tsx 4655(4.5 KB)84d ago
+✗ /matchgenius.app.supabase/blocks/text/server.ts 1886(1.8 KB)84d ago
+✗ /matchgenius.app.supabase/components.json 414(414.0 B)84d ago
+✗ /matchgenius.app.supabase/components/app-sidebar.tsx 2338(2.3 KB)6d ago
+✗ /matchgenius.app.supabase/components/auth-form.tsx 1352(1.3 KB)84d ago
+✗ /matchgenius.app.supabase/components/block-actions.tsx 2872(2.8 KB)84d ago
+✗ /matchgenius.app.supabase/components/block-close-button.tsx 746(746.0 B)84d ago
+✗ /matchgenius.app.supabase/components/block-messages.tsx 2208(2.2 KB)84d ago
+✗ /matchgenius.app.supabase/components/block.tsx 16001(15.6 KB)83d ago
+✗ /matchgenius.app.supabase/components/chat-header.tsx 3197(3.1 KB)54d ago
+✗ /matchgenius.app.supabase/components/chat.tsx 5422(5.3 KB)5d ago
+✗ /matchgenius.app.supabase/components/code-block.tsx 1747(1.7 KB)84d ago
+✗ /matchgenius.app.supabase/components/code-editor.tsx 3347(3.3 KB)84d ago
+✗ /matchgenius.app.supabase/components/console.tsx 5896(5.8 KB)84d ago
+✗ /matchgenius.app.supabase/components/create-block.tsx 2792(2.7 KB)84d ago
+✗ /matchgenius.app.supabase/components/data-stream-handler.tsx 2371(2.3 KB)5d ago
+✗ /matchgenius.app.supabase/components/dating-app-header.tsx 1240(1.2 KB)52d ago
+✗ /matchgenius.app.supabase/components/diffview.tsx 2879(2.8 KB)84d ago
+✗ /matchgenius.app.supabase/components/document-preview.tsx 7934(7.7 KB)84d ago
+✗ /matchgenius.app.supabase/components/document-skeleton.tsx 1725(1.7 KB)84d ago
+✗ /matchgenius.app.supabase/components/document.tsx 3906(3.8 KB)84d ago
+✗ /matchgenius.app.supabase/components/editor.tsx 4465(4.4 KB)84d ago
+✗ /matchgenius.app.supabase/components/header.tsx 1652(1.6 KB)7d ago
+✗ /matchgenius.app.supabase/components/icons.tsx 56100(54.8 KB)55d ago
+✗ /matchgenius.app.supabase/components/image-editor.tsx 1089(1.1 KB)84d ago
+✗ /matchgenius.app.supabase/components/markdown.tsx 2573(2.5 KB)84d ago
+✗ /matchgenius.app.supabase/components/message-actions.tsx 5310(5.2 KB)84d ago
+✗ /matchgenius.app.supabase/components/message-editor.tsx 2770(2.7 KB)84d ago
+✗ /matchgenius.app.supabase/components/message-reasoning.tsx 1891(1.8 KB)84d ago
+✗ /matchgenius.app.supabase/components/message.tsx 9212(9.0 KB)84d ago
+✗ /matchgenius.app.supabase/components/messages.tsx 2332(2.3 KB)55d ago
+✗ /matchgenius.app.supabase/components/model-selector.tsx 2504(2.4 KB)71d ago
+✗ /matchgenius.app.supabase/components/multimodal-input.tsx 9179(9.0 KB)53d ago
+✗ /matchgenius.app.supabase/components/overview.tsx 1179(1.2 KB)71d ago
+✗ /matchgenius.app.supabase/components/preview-attachment.tsx 1202(1.2 KB)84d ago
+✗ /matchgenius.app.supabase/components/providers.tsx 453(453.0 B)6d ago
+✗ /matchgenius.app.supabase/components/providers/index.tsx 1246(1.2 KB)3d ago
+✗ /matchgenius.app.supabase/components/providers/supabase-auth-provider.tsx 6216(6.1 KB)3d ago
+✗ /matchgenius.app.supabase/components/sheet-editor.tsx 3846(3.8 KB)84d ago
+✗ /matchgenius.app.supabase/components/sidebar-history.tsx 13176(12.9 KB)6d ago
+✗ /matchgenius.app.supabase/components/sidebar-toggle.tsx 781(781.0 B)84d ago
+✗ /matchgenius.app.supabase/components/sidebar-user-nav.tsx 3564(3.5 KB)6d ago
+✗ /matchgenius.app.supabase/components/sign-out-form.tsx 446(446.0 B)84d ago
+✗ /matchgenius.app.supabase/components/submit-button.tsx 814(814.0 B)84d ago
+✗ /matchgenius.app.supabase/components/subscription-guard.tsx 3685(3.6 KB)56d ago
+✗ /matchgenius.app.supabase/components/suggested-actions.tsx 2540(2.5 KB)71d ago
+✗ /matchgenius.app.supabase/components/suggestion.tsx 2453(2.4 KB)84d ago
+✗ /matchgenius.app.supabase/components/theme-provider.tsx 300(300.0 B)84d ago
+✗ /matchgenius.app.supabase/components/toolbar.tsx 13065(12.8 KB)84d ago
+✗ /matchgenius.app.supabase/components/ui/alert-dialog.tsx 4464(4.4 KB)84d ago
+✗ /matchgenius.app.supabase/components/ui/button.tsx 1950(1.9 KB)53d ago
+✗ /matchgenius.app.supabase/components/ui/card.tsx 1888(1.8 KB)84d ago
+✗ /matchgenius.app.supabase/components/ui/dropdown-menu.tsx 7474(7.3 KB)71d ago
+✗ /matchgenius.app.supabase/components/ui/input.tsx 799(799.0 B)84d ago
+✗ /matchgenius.app.supabase/components/ui/label.tsx 734(734.0 B)84d ago
+✗ /matchgenius.app.supabase/components/ui/select.tsx 5658(5.5 KB)84d ago
+✗ /matchgenius.app.supabase/components/ui/separator.tsx 780(780.0 B)84d ago
+✗ /matchgenius.app.supabase/components/ui/sheet.tsx 4376(4.3 KB)55d ago
+✗ /matchgenius.app.supabase/components/ui/sidebar.tsx 23819(23.3 KB)55d ago
+✗ /matchgenius.app.supabase/components/ui/skeleton.tsx 264(264.0 B)84d ago
+✗ /matchgenius.app.supabase/components/ui/textarea.tsx 696(696.0 B)84d ago
+✗ /matchgenius.app.supabase/components/ui/tooltip.tsx 1170(1.1 KB)84d ago
+✗ /matchgenius.app.supabase/components/use-scroll-to-bottom.ts 732(732.0 B)84d ago
+✗ /matchgenius.app.supabase/components/user-profile.tsx 1906(1.9 KB)7d ago
+✗ /matchgenius.app.supabase/components/version-footer.tsx 3136(3.1 KB)84d ago
+✗ /matchgenius.app.supabase/components/visibility-selector.tsx 2918(2.8 KB)71d ago
+✗ /matchgenius.app.supabase/components/weather.tsx 8271(8.1 KB)84d ago
+✗ /matchgenius.app.supabase/context.txt 15338(15.0 KB)9m ago
+✗ /matchgenius.app.supabase/docs/01-quick-start.md 2286(2.2 KB)84d ago
+✗ /matchgenius.app.supabase/docs/02-update-models.md 2293(2.2 KB)84d ago
+✗ /matchgenius.app.supabase/docs/03-blocks.md 7835(7.7 KB)84d ago
+✗ /matchgenius.app.supabase/hooks/use-block.ts 1901(1.9 KB)84d ago
+✗ /matchgenius.app.supabase/hooks/use-chat-visibility.ts 1604(1.6 KB)84d ago
+✗ /matchgenius.app.supabase/hooks/use-mobile.tsx 585(585.0 B)84d ago
+✗ /matchgenius.app.supabase/hooks/use-subscription.tsx 5160(5.0 KB)3d ago
+✗ /matchgenius.app.supabase/hooks/use-supabase.ts 465(465.0 B)7d ago
+✗ /matchgenius.app.supabase/lib/ai/models.ts 1500(1.5 KB)80d ago
+✗ /matchgenius.app.supabase/lib/ai/prompts.ts 2681(2.6 KB)79d ago
+✗ /matchgenius.app.supabase/lib/ai/tools/create-document.ts 1741(1.7 KB)6d ago
+✗ /matchgenius.app.supabase/lib/ai/tools/get-weather.ts 568(568.0 B)84d ago
+✗ /matchgenius.app.supabase/lib/ai/tools/request-suggestions.ts 2756(2.7 KB)6d ago
+✗ /matchgenius.app.supabase/lib/ai/tools/update-document.ts 2039(2.0 KB)6d ago
+✗ /matchgenius.app.supabase/lib/blocks/server.ts 2496(2.4 KB)6d ago
+✗ /matchgenius.app.supabase/lib/editor/config.ts 1449(1.4 KB)84d ago
+✗ /matchgenius.app.supabase/lib/editor/diff.js 13136(12.8 KB)84d ago
+✗ /matchgenius.app.supabase/lib/editor/functions.tsx 1744(1.7 KB)84d ago
+✗ /matchgenius.app.supabase/lib/editor/react-renderer.tsx 270(270.0 B)84d ago
+✗ /matchgenius.app.supabase/lib/editor/suggestions.tsx 3817(3.7 KB)84d ago
+✗ /matchgenius.app.supabase/lib/stripe-client.ts 265(265.0 B)56d ago
+✗ /matchgenius.app.supabase/lib/stripe-utils.ts 898(898.0 B)56d ago
+✗ /matchgenius.app.supabase/lib/stripe.ts 1172(1.1 KB)56d ago
+✗ /matchgenius.app.supabase/lib/supabase/auth-helpers.ts 936(936.0 B)3d ago
+✗ /matchgenius.app.supabase/lib/supabase/auth.ts 1546(1.5 KB)3d ago
+✗ /matchgenius.app.supabase/lib/supabase/client.ts 814(814.0 B)3d ago
+✗ /matchgenius.app.supabase/lib/supabase/db.ts 9280(9.1 KB)6d ago
+✗ /matchgenius.app.supabase/lib/supabase/helpers.ts 1751(1.7 KB)3d ago
+✗ /matchgenius.app.supabase/lib/supabase/migration.sql 0(0.0 B)7d ago
+✗ /matchgenius.app.supabase/lib/supabase/server.ts 1162(1.1 KB)7d ago
+✗ /matchgenius.app.supabase/lib/supabase/utils.ts 2480(2.4 KB)7d ago
+✗ /matchgenius.app.supabase/lib/types.ts 1159(1.1 KB)6d ago
+✗ /matchgenius.app.supabase/lib/utils.ts 5896(5.8 KB)84d ago
+✗ /matchgenius.app.supabase/lib/utils/api.ts 1967(1.9 KB)3d ago
+✗ /matchgenius.app.supabase/middleware.ts 3788(3.7 KB)3d ago
+✗ /matchgenius.app.supabase/next-env.d.ts 228(228.0 B)84d ago
+✗ /matchgenius.app.supabase/next.config.ts 244(244.0 B)84d ago
+✗ /matchgenius.app.supabase/package.json 3210(3.1 KB)6d ago
+✗ /matchgenius.app.supabase/pnpm-lock.yaml 275295(268.8 KB)7d ago
+✗ /matchgenius.app.supabase/postcss.config.mjs 166(166.0 B)84d ago
+✗ /matchgenius.app.supabase/scripts/check-subscription.js 1697(1.7 KB)6d ago
+✗ /matchgenius.app.supabase/scripts/sync-stripe-products.ts 2929(2.9 KB)56d ago
+✗ /matchgenius.app.supabase/tailwind.config.ts 2734(2.7 KB)71d ago
+✗ /matchgenius.app.supabase/tsconfig.json 640(640.0 B)84d ago
+```
+
+
+
+
+## FINAL REMINDER
+
+Instructions for AI: ⚠️ DO NOT REQUEST ADDITIONAL CONTEXT OR FILES ALREADY INCLUDED ABOVE. This document contains complete project context. Only request files that have been modified since context generation (using lc-list-modified-files) or specific files marked as excluded (✗) that are necessary for your analysis.

@@ -9,9 +9,10 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  // Use getUser instead of getSession for security
+  const { data: userData, error: userError } = await supabase.auth.getUser();
 
-  if (!session || !session.user) {
+  if (userError || !userData?.user) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -26,9 +27,10 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  // Use getUser instead of getSession for security
+  const { data: userData, error: userError } = await supabase.auth.getUser();
 
-  if (!session || !session.user) {
+  if (userError || !userData?.user) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -46,7 +48,7 @@ export async function PATCH(request: Request) {
     .select('*')
     .eq('chat_id', chatId)
     .eq('message_id', messageId)
-    .eq('user_id', session.user.id);
+    .eq('user_id', userData.user.id);
     
   if (existingVotes && existingVotes.length > 0) {
     // Update existing vote
@@ -61,7 +63,7 @@ export async function PATCH(request: Request) {
       .insert({
         chat_id: chatId,
         message_id: messageId,
-        user_id: session.user.id,
+        user_id: userData.user.id,
         type
       });
   }

@@ -24,15 +24,16 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
       notFound();
     }
 
-    const session = await auth();
+    // Use auth() which now uses getUser() internally for secure authentication
+    const authData = await auth();
 
     if (chat.visibility === 'private') {
-      if (!session || !session.user) {
-        console.error('No session for private chat');
+      if (!authData || !authData.user) {
+        console.error('No authenticated user for private chat');
         notFound();
       }
 
-      if (session.user.id !== chat.userId) {
+      if (authData.user.id !== chat.userId) {
         console.error('User not authorized for chat');
         notFound();
       }
@@ -53,7 +54,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
             initialMessages={convertToUIMessages(messagesFromDb)}
             selectedChatModel={DEFAULT_CHAT_MODEL}
             selectedVisibilityType={chat.visibility}
-            isReadonly={session?.user?.id !== chat.userId}
+            isReadonly={authData?.user?.id !== chat.userId}
           />
           <DataStreamHandler id={id} />
         </>
@@ -67,7 +68,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
           initialMessages={convertToUIMessages(messagesFromDb)}
           selectedChatModel={chatModelFromCookie.value}
           selectedVisibilityType={chat.visibility}
-          isReadonly={session?.user?.id !== chat.userId}
+          isReadonly={authData?.user?.id !== chat.userId}
         />
         <DataStreamHandler id={id} />
       </>

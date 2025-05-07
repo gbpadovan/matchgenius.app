@@ -4,23 +4,39 @@
 {% endif %}
 # Detailed Repository Content: **{{ project_name }}**
 
+## Instructions for AI: ⚠️ COMPLETE PROJECT CONTEXT PROVIDED - NO NEED TO REQUEST ADDITIONAL CONTEXT ⚠️
+
+## Quick Reference
+- ✓ = Full content included below
+{% if highlights %}
+- ○ = Outline only (structure/definitions)
+{% endif %}
+- ✗ = Excluded (not included)
+
 > Generation timestamp: {{ context_timestamp }}  
-> Use lc-list-modified-files tool to track changes since generation, or if the tool is absent ask user to paste the result of running lc-changed CLI
+> For updates: Use lc-list-modified-files first to identify changes, then lc-get-files for specific files
+> If tools are unavailable, ask the user to run the "lc-changed" CLI command
 
 This context presents a comprehensive view of the _/{{ project_name }}_ repository.
 
 {% if sample_requested_files %}
-## 📂 How to Request Missing Files 📂
+## Instructions for AI: 📂 Before Requesting Any Files
 
-Files marked with "✗" or "○" can be retrieved using either:
+1. **SEARCH THIS DOCUMENT** to check if the file is already included
+2. **CHECK the repository structure** below to confirm file status (✓,{% if highlights %} ○,{% endif %} or ✗)
+3. Only request ✗{% if highlights %} or ○{% endif %} files that are absolutely necessary for your analysis
 
-!!! IMPORTANT - ALWAYS CHECK FOR TOOLS FIRST !!!
+{% if highlights %}
+**EFFICIENCY TIP:** If you only need specific functions or methods, use lc-get-implementations instead of requesting complete files.
+{% endif %}
+
+### How to Request Missing Files
+
 Check if lc-get-files tool is available in your environment before proceeding to option 2.
 
 1. Using the lc-get-files tool (if available in your environment):
-   !!! IMPORTANT - ROOT PATH FOR lc-get-files ONLY !!!
-   root_path must be: {{ abs_root_path }}
-   Example request
+   **ROOT PATH must be: {{ abs_root_path }}**
+   Example request:
   ```json
   {
     "root_path": "{{ abs_root_path }}",
@@ -56,7 +72,39 @@ Check if lc-get-files tool is available in your environment before proceeding to
 {% endif %}
 
 {% if highlights %}
-## File Outlines
+## Code Outlines - Implementation Retrieval
+
+Smart outlines highlighting important definitions in the codebase.
+{% if sample_definitions %}
+Instructions for AI:: The following outlines show definition declarations in files. To retrieve full implementations of any function, class, or method shown here:
+
+> **Note:** Implementation retrieval doesn't support C/C++ files.
+
+1. Using the lc-get-implementations tool:
+   ```json
+   {
+     "root_path": "{{ abs_root_path }}",
+     "queries": [
+       {% for path, name in sample_definitions %}
+       ["{{ path }}", "{{ name }}"]{% if not loop.last %},{% endif %}
+       {% endfor %}
+     ]
+   }
+   ```
+
+2. Without tools: Copy these references to clipboard:
+   ```
+   {% for path, name in sample_definitions %}
+   {{ path }}:{{ name }}
+   {% endfor %}
+   ```
+   Then ask the human to run `lc-clip-implementations`
+
+NOTE: Prefer requesting specific implementations rather than entire files when possible.
+{% endif %}
 
 {% include 'lc-highlights.j2' %}
 {% endif %}
+## FINAL REMINDER
+
+Instructions for AI: ⚠️ DO NOT REQUEST ADDITIONAL CONTEXT OR FILES ALREADY INCLUDED ABOVE. This document contains complete project context. Only request files that have been modified since context generation (using lc-list-modified-files) or specific files marked as excluded (✗) that are necessary for your analysis.

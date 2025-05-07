@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { authenticateUser, createUnauthorizedResponse } from '@/lib/supabase/auth-helpers';
 import { BlockKind } from '@/components/block';
 
 export async function GET(request: Request) {
@@ -9,11 +9,12 @@ export async function GET(request: Request) {
     return new Response('Missing id', { status: 400 });
   }
 
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session || !session.user) {
-    return new Response('Unauthorized', { status: 401 });
+  // Use the secure authentication helper
+  const { authenticated, user, supabase, error } = await authenticateUser();
+  
+  if (!authenticated || !user) {
+    console.error('Authentication error:', error);
+    return createUnauthorizedResponse();
   }
 
   // Get documents by id
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
     return new Response('Not Found', { status: 404 });
   }
 
-  if (document.user_id !== session.user.id) {
+  if (document.user_id !== user.id) { // Use user.id instead of session.user.id
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -43,11 +44,12 @@ export async function POST(request: Request) {
     return new Response('Missing id', { status: 400 });
   }
 
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session || !session.user) {
-    return new Response('Unauthorized', { status: 401 });
+  // Use the secure authentication helper
+  const { authenticated, user, supabase, error } = await authenticateUser();
+  
+  if (!authenticated || !user) {
+    console.error('Authentication error:', error);
+    return createUnauthorizedResponse();
   }
 
   const {
@@ -87,7 +89,7 @@ export async function POST(request: Request) {
         content,
         title,
         kind,
-        user_id: session.user.id,
+        user_id: user.id, // Use user.id instead of session.user.id
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -108,11 +110,12 @@ export async function PATCH(request: Request) {
     return new Response('Missing id', { status: 400 });
   }
 
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session || !session.user) {
-    return new Response('Unauthorized', { status: 401 });
+  // Use the secure authentication helper
+  const { authenticated, user, supabase, error } = await authenticateUser();
+  
+  if (!authenticated || !user) {
+    console.error('Authentication error:', error);
+    return createUnauthorizedResponse();
   }
 
   // Get document to check ownership
@@ -127,16 +130,19 @@ export async function PATCH(request: Request) {
     return new Response('Not Found', { status: 404 });
   }
 
-  if (document.user_id !== session.user.id) {
+  if (document.user_id !== user.id) { // Use user.id instead of session.user.id
     return new Response('Unauthorized', { status: 401 });
   }
 
-  // Delete document versions after timestamp
-  await supabase
-    .from('document_versions')
-    .delete()
-    .eq('document_id', id)
-    .gt('created_at', new Date(timestamp).toISOString());
+  // Update document timestamp
+  const { data: updatedDocument } = await supabase
+    .from('documents')
+    .update({
+      updated_at: timestamp || new Date().toISOString()
+    })
+    .eq('id', id)
+    .select()
+    .single();
 
-  return new Response('Deleted', { status: 200 });
+  return Response.json(updatedDocument, { status: 200 });
 }

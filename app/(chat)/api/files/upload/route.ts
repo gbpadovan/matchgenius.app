@@ -2,7 +2,7 @@ import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { createClient } from '@/lib/supabase/server';
+import { authenticateUser, createUnauthorizedResponse } from '@/lib/supabase/auth-helpers';
 
 // Use Blob instead of File since File is not available in Node.js environment
 const FileSchema = z.object({
@@ -18,11 +18,12 @@ const FileSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Use the secure authentication helper
+  const { authenticated, user, supabase, error } = await authenticateUser();
+  
+  if (!authenticated || !user) {
+    console.error('Authentication error:', error);
+    return createUnauthorizedResponse();
   }
 
   if (request.body === null) {
@@ -49,21 +50,26 @@ export async function POST(request: Request) {
 
     // Get filename from formData since Blob doesn't have name property
     const filename = (formData.get('file') as File).name;
-    const fileBuffer = await file.arrayBuffer();
 
-    try {
-      const data = await put(`${filename}`, fileBuffer, {
-        access: 'public',
-      });
+    // Upload to Vercel Blob
+    const blob = await put(filename, file, {
+      access: 'public',
+    });
 
-      return NextResponse.json(data);
-    } catch (error) {
-      return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
-    }
+    // You can save the blob URL to your database here
+    // For example:
+    // await supabase.from('files').insert({
+    //   url: blob.url,
+    //   user_id: user.id, // Use user.id instead of session.user.id
+    //   created_at: new Date().toISOString(),
+    // });
+
+    return NextResponse.json({ url: blob.url });
   } catch (error) {
+    console.error('Error uploading file:', error);
     return NextResponse.json(
-      { error: 'Failed to process request' },
-      { status: 500 },
+      { error: 'Error uploading file' },
+      { status: 500 }
     );
   }
 }

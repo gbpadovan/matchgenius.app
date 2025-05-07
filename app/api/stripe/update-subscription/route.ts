@@ -8,17 +8,17 @@ export async function POST(req: Request) {
   try {
     console.log('Update Subscription API: Request received');
     
-    // Get user from session
-    const session = await auth();
+    // Get authenticated user data securely
+    const authData = await auth();
     
-    console.log('Update Subscription API: Session data:', {
-      authenticated: !!session?.user,
-      userId: session?.user?.id,
-      email: session?.user?.email
+    console.log('Update Subscription API: User data:', {
+      authenticated: !!authData?.user,
+      userId: authData?.user?.id,
+      email: authData?.user?.email
     });
     
-    if (!session?.user || !session.user.id || !session.user.email) {
-      console.log('Update Subscription API: Unauthorized - No valid session');
+    if (!authData?.user || !authData.user.id || !authData.user.email) {
+      console.log('Update Subscription API: Unauthorized - No valid user');
       return NextResponse.json(
         { error: 'You must be logged in to update subscription' },
         { status: 401 }
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     // Update our database with the subscription details
     console.log('Update Subscription API: Updating subscription in database');
     await createOrUpdateSubscription({
-      userId: session.user.id,
+      userId: authData.user.id,
       stripeCustomerId,
       stripeSubscriptionId: subscription.id,
       stripePriceId: subscription.items.data[0].price.id,
@@ -74,15 +74,15 @@ export async function POST(req: Request) {
     const supabase = await createClient();
     
     // Return the updated subscription
-    const { data: subscriptions } = await supabase
+    const { data: userSubscriptions } = await supabase
       .from('subscriptions')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', authData.user.id)
       .single();
     
     console.log('Update Subscription API: Returning updated subscription');
     
-    return NextResponse.json(subscriptions);
+    return NextResponse.json(userSubscriptions);
   } catch (error: any) {
     console.error('Error updating subscription:', error);
     return NextResponse.json(
